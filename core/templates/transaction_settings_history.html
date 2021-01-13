@@ -1,0 +1,153 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} History settings {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card text-white">
+      <div class="card-body"> 
+        <form action="." method="POST">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-2">
+              Stock 
+            </div>
+            <div class="col-10">
+              {{ form.stock }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Amount 
+            </div>
+            <div class="col-10">
+              {{ form.amount }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Date bought
+            </div>
+            <div class="col-10">
+              {{ form.date_bought }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Price bought [EUR]
+            </div>
+            <div class="col-10">
+              {{ form.price_bought }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Date sold
+            </div>
+            <div class="col-10">
+              {{ form.date_sold }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Price sold [EUR]
+            </div>
+            <div class="col-10">
+              {{ form.price_sold }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Buy fees [EUR]: 
+            </div>
+            <div class="col-10">
+              {{ form.buy_fees_constant }} + {{ form.buy_fees_linear }} x price_bought x amount 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Sell fees [EUR]: 
+            </div>
+            <div class="col-10">
+              {{ form.sell_fees_constant }} + {{ form.sell_fees_linear }} x price_bought x amount 
+            </div>
+          </div>    
+          <div class="row">
+            <div class=col-12>
+              {{ form.errors }}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              <a class="btn btn-danger btn-sm" href="/history">
+                Cancel
+              </a>
+            </div>
+            <div class="col-2">
+              <input type="submit" value="Submit"/>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        Information
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-2">
+            Stock
+          </div>
+          <div class="col-10">
+            The Stock you bought. In case it is not listed just create a new one.
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-2">
+            Amount
+          </div>
+          <div class="col-10">
+            How many stocks you bought/sold.
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-2">
+            Date
+          </div>
+          <div class="col-10">
+            The date you performed the transaction. This date is used to retrieve the price. 
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-2">
+            Price
+          </div>
+          <div class="col-10">
+            Not required. The price per stock that you payed. In case you add your own price, the program wil automatically overwrite the value obtained using Date.
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-2">
+            Fees
+          </div>
+          <div class="col-10">
+            The amount of fees you had to pay on top of the given price. You can enter both a constant and a linear term dependant on the price. Note that the sell fees will be overwritten once you enter the sell transaction.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+
+

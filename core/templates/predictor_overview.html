@@ -1,0 +1,81 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Indicators {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="col-md-12">
+	  <div class="card"> 	
+            <div class="card-header">
+              <h4 class="card-title">Indicators</h4>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table" style="white-space: nowrap;">
+                  <thead class="text-primary">
+                    <tr class="d-flex">
+                      <th class="col-4">
+	                    Ticker
+                      </th>
+                      <th class="col-1 text-center">
+                        Acc/dist
+	                  </th>
+                      <th class="col-1 text-center">
+                        Bollinger
+                      </th>
+                      <th class="col-1 text-center">
+                        Macd
+                      </th>
+                      <th class="col-1 text-center">
+                        Stochastic
+                      </th>
+                      <th class="col-1 text-center">
+                        Rsi
+                      </th>
+                      <th class="col-1 text-center">
+                        Aroon
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for ticker, indicator in queryset.items %}
+                      <tr class="d-flex">
+                        <td class="col-4">
+                            {{ ticker }}
+                        </td>
+                        <td class="col-1 text-center">
+                            {{ indicator.acc_dist }}
+                        </td>
+                        <td class="col-1 text-center">
+                            {{ indicator.bollinger }}
+                        </td>
+                        <td class="col-1 text-center">
+                            {{ indicator.macd_final }}
+                        </td>
+                        <td class="col-1 text-center">
+                            {{ indicator.stochastic }}
+                        </td>
+                        <td class="col-1 text-center">
+                            {{ indicator.rsi }}
+                        </td>
+                        <td class="col-1 text-center">
+                            {{ indicator.aroon }}
+                        </td>
+                      </tr>
+		    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+	  </div>
+        </div>
+    </div>
+    
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

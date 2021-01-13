@@ -1,0 +1,32 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Request date{% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="row">
+  <div class=col-12>
+    <div class="card">
+      <div class="card-body">
+        <form action="." method="POST">
+          {% csrf_token %}
+          <div class="row"> 
+            <div class="col-3"> 
+              Requested date: {{ form.date }} 
+            </div>
+            <input type="submit" value="Download"/>
+          </div> 
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}
+

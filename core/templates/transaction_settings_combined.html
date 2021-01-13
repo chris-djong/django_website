@@ -1,0 +1,84 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} Settings choice {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title">Settings choice</h4>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table" style="white-space: nowrap;">
+            <thead class="text-primary">
+              <tr class="d-flex">
+                <th class="col-4">
+                  Ticker
+                </th>
+                <th class="col-2">
+                  Amount
+                </th>
+                <th class="col-3">
+                  Initial Price
+                </th>
+                <th class="col-3">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Render table stock data -->
+              <!-- Loop through labels for overview -->
+              {%  for label, stocks in queryset.items %}
+                <tr class="d-flex">
+                  <td class="col-12"> 
+                    {{label}} 
+                  </td>
+                </tr> 
+                <!-- Loop through stocks of this label -->
+                {% for stock in stocks %}
+                  <tr class="d-flex">
+                    <td class="col-4">
+                      {{stock.name}} ({{stock.ticker}})
+                    </td>
+                    <td class="col-2">
+                      {{stock.amount}}
+                    </td>
+                    <td class="col-3">
+                      {{stock.initial_price}}
+                    </td>
+	                <td class="col-3">
+                      <button type="button" rel="tooltip" class="btn btn-info animation-on-hover btn-sm btn-icon">
+                        <a href={{stock.plot_link}}>
+	                      <img src="{% static 'assets/img/plot.png' %}"/>
+		                </a>
+		              </button>
+		              <button type="button" rel="tooltip" class="btn btn-success animation-on-hover btn-sm btn-icon">
+                        <a href={{stock.settings_link}}> 
+	                      <img src="{% static 'assets/img/settings.png' %}"/>
+		                </a>                  
+		              </button>
+		              <button type="button" rel="tooltip" class="btn btn-danger animation-on-hover btn-sm btn-icon">
+                        <a href={{stock.delete_link}}>
+                          <img src="{% static 'assets/img/delete.png' %}"/>
+                        </a>
+                      </button>
+		            </td>
+                  </tr>
+                {% endfor %}
+              {% endfor %} <!-- End looping through labels -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>        
+{% endblock content %}
+
+

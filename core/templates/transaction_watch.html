@@ -1,0 +1,452 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block title %}Watch portfolio{% endblock %}
+
+{% block content %}
+<!-- Form for user choice -->
+<div class="row">
+  <div class=col-12>
+    <div class="card">
+      <div class="card-body">
+        <form action="." method="POST">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-8">
+              User: {{ form.user }} <input type="submit" value="Reload"/>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Show the current portfolio view -->
+<div class="row">
+<div class="col-12">
+  <div class="card">
+    <div class="card-header">
+      <h4 class="card-title">Portfolio</h4>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table" style="white-space: nowrap;">
+          <thead class="text-primary">
+            <tr class="d-flex">
+              <th class="col-4">
+	            Ticker
+              </th>
+              <th class="col-1 text-right">
+                Amount
+	          </th>
+              <th class="col-1 text-right">
+                Initial Price
+              </th>
+              <th class="col-1 text-right">
+                Current Price
+              </th>
+              <th class="col-2 text-right">
+                24h Change
+              </th>
+  	          <th class="col-1 text-right">
+                Net Total
+	          </th>
+	          <th class="col-1 text-right">
+                Total Profit
+	          </th>
+	          <th class="col-1 text-right">
+	            Actions
+	          </th>
+            </tr>
+          </thead>
+	      <tbody>
+	        {% for label, stocks in queryset_portfolio.items %}
+	          <tr class="d-flex">
+                <td class="col-3">
+	              <p class="text-primary">
+	                {{label}}
+	              </p>
+                </td>
+	          </tr>
+              {% for stock in stocks %}
+	            <tr class="d-flex">
+                  <td class="col-4">
+	                {{stock.name}} ({{stock.ticker}})
+	              </td>
+	              <td class="col-1 text-right">
+	                *****
+	              </td>
+	              <td class="col-1 text-right">
+                    {{stock.initial_price}}
+	              </td>
+                  <td class="col-1 text-right">
+                    {{stock.current_price}}
+	              </td>
+                  {% if stock.daily_change > 0 %}
+	                {% if stock.exchange_closed %}
+	                  <td class="col-2 text-right">
+      			        <span class="text-warning">
+    			          {{ stock.daily_change }}
+    			        </span>
+    			        <span class="text-success">
+    			          ({{ stock.daily_change_perc }}%)
+    			        </span>
+		              </td>
+	                {% else %}
+	                  {% if stock.daily_change_perc > 3 %}
+		                <td class="col-2 text-right bg-success">
+				  <span class="text-black">
+	                      {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
+				  </span>
+		                </td>
+		              {% else %}
+		                <td class="col-2 text-right">
+		                  <div class="text-success">
+	                        {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
+	                      </div>
+		                </td>
+		              {% endif %}
+	                {% endif %}
+                  {% else %}
+	                {% if stock.exchange_closed %}
+	                  <td class="col-2 text-right">
+	    		        <span class="text-warning">
+	    		          {{ stock.daily_change }}
+	    		        </span>
+	    		        <span class="text-danger">
+	    		          ({{ stock.daily_change_perc }}%)
+       			        </span>
+	    	          </td>
+	                {% else %}
+	                  {% if stock.daily_change_perc < -3 %}
+		                <td class="col-2 text-right bg-danger">
+		                  {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
+		                </td>
+		              {% else %}
+		                <td class="col-2 text-right">
+	                      <div class="text-danger">
+	                        {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
+	                      </div>
+		                </td>
+		              {% endif %}
+	                {% endif %}
+	              {% endif %}
+		    	<td class="col-1 text-right">
+	              *****
+	            </td>
+	            {% if stock.total_profit > 0 %}
+	              <td class="col-1 text-right">
+	                <div class="text-success">
+	                  ***** ({{ stock.total_profit_perc }}%)
+                    </div>
+	              </td>
+	            {% else %}
+	              {% if stock.total_profit < 0%}
+	                <td class="col-1 text-right">
+	                  <div class="text-danger">
+	                    ***** ({{ stock.total_profit_perc }}%)
+                      </div>
+	                </td>
+	              {% else %}
+                    <td class="col-1 text-right">
+	                  ***** ({{ stock.total_profit_perc }}%)
+ 			        </td>
+	              {% endif %}
+	            {% endif %}
+
+                <td class="col-1 td-actions text-right">
+                  <button type="button" rel="tooltip" class="btn btn-info animation-on-hover btn-sm btn-icon">
+                    <a href={{stock.plot_link}}>
+	                  <img src="{% static 'assets/img/plot.png' %}"/>
+		            </a>
+		          </button>
+                </td>
+	          </tr>
+	        {% endfor %}
+
+	        <!-- Render only on last iteration -->
+            {% if forloop.last %}
+              <!-- First add amount of cash that is available -->
+              {% if current_total_cash != 0 %}
+                <tr class="d-flex">
+                  <td class="col-4 text-left">
+	                <p class="text-primary">
+	                  Cash
+	                </p>
+	              </td>
+                </tr>
+                <tr class="d-flex">
+                  <td class="col-3 text-left">
+	                Free Cash Flow
+	              </td>
+                  <td class="col-4">
+	              </td>
+                  <td class="col-2 text-right">
+	                ****
+	              </td>
+                  <td class="col-3">
+	              </td>
+                </tr>
+              {% endif %}
+
+              <!-- Then an empty row for visibility purposes -->
+              <tr>
+                <td>
+                  </br>
+	            </td> <!--</br> is needed here as otherwise the cell has a lower height -->
+              </tr>
+
+            <!-- Row containing total -->
+            <tr class="d-flex">
+     	      <td class="text-left col-4">
+	            Total
+	          </td>
+	          <td class="col-3">
+	          </td>
+	          {% if not daily_from_today %}
+	            {% if daily_change_perc > 0 %}
+	              <td class="col-2 text-right">
+    			    <span class="text-warning">
+    			      *****
+    			    </span>
+    			    <span class="text-success">
+    			      ({{ daily_change_perc }}%)
+    			    </span>
+		          </td>
+	            {% else %}
+	              {% if daily_change_perc < 0 %}
+                    <td class="col-2 text-right">
+    			      <span class="text-warning">
+    			        *****
+    			      </span>
+    			      <span class="text-danger">
+    			        ({{ daily_change_perc }}%)
+    			      </span>
+		            </td>
+		          {% else %}
+		            <td class="col-2 text-right">
+    			      <span class="text-warning">
+    			        *****
+    			      </span>
+    			      <span class="text-warning">
+    			        ({{ daily_change_perc }}%)
+    			      </span>
+		            </td>
+		          {% endif %}
+			    {% endif %}
+			  {% else %}
+			    {% if daily_change_perc > 3 %}
+			      <td class="col-2 text-right bg-success">
+				      <span class="text-black">
+			        ***** ({{daily_change_perc}}%)
+				      </span>
+				  </td>
+			    {% else %}
+			      {% if daily_change_perc > 0 %}
+	                <td class="col-2 text-right">
+	                  <div class="text-success">
+		                ***** ({{daily_change_perc}}%)
+		              </div>
+		            </td>
+	              {% else %}
+	                {% if daily_change_perc < -3 %}
+		              <td class="col-2 text-right bg-danger">
+	                    ***** ({{daily_change_perc}}%)
+		              </td>
+	                {% else %}
+	                  {% if daily_change_perc < 0 %}
+		                <td class="col-2 text-right">
+		                  <div class="text-danger">
+		                    ***** ({{daily_change_perc}}%)
+		                  </div>
+		                </td>
+		              {% else %}
+		                <td class="col-2 text-right">
+		                  <div class="text-warning">
+		                    ***** ({{daily_change_perc}}%)
+		                  </div>
+		                </td>
+		              {% endif %}
+	                {% endif %}
+	              {% endif %}
+	            {% endif %}
+              {% endif %}
+              <td class="col-1 text-right">
+	            *****
+	          </td>
+              {% if current_total_profit_perc > 0 %}
+                <td class="col-1 text-right">
+                  <div class="text-success">
+	                ***** ({{current_total_profit_perc}}%)
+	              </div>
+	            </td>
+              {% else %}
+                <td class="col-1 text-right">
+                  <div class="text-danger">
+	                ***** ({{current_total_profit_perc}}%)
+	              </div>
+	            </td>
+              {% endif %}
+              <td class="col-1 td-actions text-right">
+              </td>
+              <td class="col-2">
+              </td>
+            </tr>
+          {% endif %}  <!-- For loop last -->
+        {% endfor %} <!-- End looping through labels -->
+
+        <!-- Render the create array in case we have not stock and the for loop is empty -->
+        {% if queryset_portfolio|length == 0  %}
+  	      <!-- Row containing total -->
+          <tr class="d-flex">
+            <td class="text-left col-3">
+              Total
+	        </td>
+            <td class=col-5>
+	        </td>
+            <td class="text-left col-1">
+	          ***** ({{current_total_profit_perc}}%)
+	        </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- And last the history table -->
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h4 class="card-title">History</h4>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table" style="white-space: nowrap;">
+            <thead class="text-primary">
+              <tr class="d-flex">
+                <th class="col-1">
+	              Date bought
+                </th>
+                <th class="col-1">
+                  Date sold
+	            </th>
+                <th class="col-2">
+                  Name
+                </th>
+                <th class="col-1 text-right">
+                  Amount
+                </th>
+                <th class="col-1">
+                  Type
+                </th>
+                <th class="col-1 text-right">
+                  Price bought
+                </th>
+  	            <th class="col-1 text-right">
+                  Price sold
+	            </th>
+	            <th class="col-1 text-right">
+                  Net total
+	            </th>
+	            <th class="col-1 text-right">
+	              Profit
+	            </th>
+              </tr>
+            </thead>
+            <!-- Render table stock data -->
+            <tbody>
+              <!-- Loop through labels for overview -->
+              {%  for label, transaction in queryset_history.items %}
+                <tr class="d-flex">
+                  <td class="col-1">
+	                {{ transaction.transaction.date_bought | date:"d-m-y"}}
+                  </td>
+                  <td class="col-1">
+                    {% if transaction.transaction.date_sold is None %}
+                      /
+                    {% else %}
+                      {{ transaction.transaction.date_sold | date:"d-m-y"}}
+                    {% endif %}
+	              </td>
+                  <td class="col-2" style="overflow: hidden">
+                    {{ transaction.transaction.stock.name }} ({{ transaction.transaction.stock.ticker }})
+                  </td>
+                  <td class="col-1 text-right">
+                    *****
+                  </td>
+                  {% if transaction.transaction.is_split %}
+                    <td class="col-1">
+                      <div class="text-warning">
+                        SPLIT
+                      </div>
+                    </td>
+                  {% else %}
+                    {% if transaction.transaction.date_sold is None %}
+                      <td class="col-1">
+                        <div class="text-success">
+                          BUY
+                        </div>
+                      </td>
+                    {% else %}
+                      <td class="col-1">
+                        <div class="text-danger">
+                          SELL
+                        </div>
+                      </td>
+                    {% endif %}
+                  {% endif %}
+                  <td class="col-1 text-right">
+                    {{ transaction.transaction.price_bought }}
+                  </td>
+  	              <td class="col-1 text-right">
+                    {% if transaction.transaction.date_sold is None %}
+                      /
+                    {% else %}
+                      {{ transaction.transaction.price_sold }}
+                    {% endif %}
+	              </td>
+	              <td class="col-1 text-right">
+                    *****
+	              </td>
+	              {% if transaction.profit > 0 %}
+                    <td class="col-1 text-right">
+                      <div class="text-success">
+                        *****
+                      </div>
+                    </td>
+                  {% else %}
+                    <td class="col-1 text-right">
+                      <div class="text-danger">
+                        *****
+                      </div>
+                    </td>
+                  {% endif %}
+                  <td class="col-2 td-actions text-right">
+                    <button type="button" rel="tooltip" class="btn btn-info animation-on-hover btn-sm btn-icon">
+                      <a href={{transaction.plot_link}}>
+	                    <img src="{% static 'assets/img/plot.png' %}"/>
+		              </a>
+		            </button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+	      </table>
+	    </div>
+	  </div>
+	</div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+
+
+

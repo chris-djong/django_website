@@ -1,0 +1,155 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} Ranking {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="row">
+  <div class=col-12>
+    <div class="card">
+      <div class="card-body">
+        <form action="." method="POST">
+          {% csrf_token %}
+          <div class="row"> 
+            <div class="col-4"> 
+              Start date: {{ date_range_form.start_date }} 
+            </div>
+            <div class="col-4">
+              End date: {{ date_range_form.end_date }}
+            </div> 
+            <input type="submit" value="Plot"/>
+          </div> 
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-12">
+    <div class="card card-chart">
+      <div class="card-header">
+        <h5 class="card-category">Current Ranking</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="ranking-plot"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
+ 
+<script>
+  var ctx = document.getElementById('ranking-plot').getContext('2d');
+
+  var style = getComputedStyle(document.body);
+  var textColor = style.getPropertyValue('--white');
+  var gainColor = style.getPropertyValue('--success');
+  var mainAttentionColor = style.getPropertyValue('--primary');
+
+  <!-- First add line to ctx variable -->
+  var myLineChart = new Chart(ctx, {
+      type: 'line',
+
+      data: {
+          labels: {{ portfolio_plot_labels|safe }},
+          datasets: [
+	    {% for username, data in user_data.items %}
+              {
+		  label: "{{username}}",
+                  data: {{data.profit|safe}},
+                  yAxisID:'A',
+	          borderColor: "{{data.colour}}",
+                  labels: {{ data.labels|safe }}
+              },
+            {% endfor %}
+	    ]
+      },
+
+      options: {
+          title: {
+              display: true,
+              text: "Ranking",
+              fontColor: mainAttentionColor,
+              fontSize: 22
+          },
+          legend: {
+              display: true,
+              labels: {
+                  fontColor: textColor,
+                  fontSize: 22
+              }
+          },
+          tooltips: {
+              intersect: false,
+              mode: 'index'
+          },
+          animation: {
+              duration: 0
+          },
+          scales: {
+              xAxes: [{
+                  type: 'time',
+                  time: {
+                      parser: 'YYYY-MM-DD'
+                  },
+                  ticks: {
+                      maxTicksLimit: 10,
+                      fontColor: textColor,
+                      fontSize: 18,
+                  },
+                  scaleLabel: {
+                      display: true,
+                      labelString: 'Date',
+                      fontColor: textColor,
+                      fontSize: 22
+                  }
+              }],
+              yAxes: [{
+                  type: 'linear',
+                  id: 'A',
+                  position: 'right',
+                  ticks: {
+                      fontColor: gainColor,
+                      fontSize: 18 ,
+                  },
+                  scaleLabel: {
+                      display: true,
+                      labelString: 'Profit [%]',
+                      fontColor: gainColor,
+                      fontSize: 22
+                  }
+              }]
+          }
+      }
+  });
+</script>
+{% endblock javascripts %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

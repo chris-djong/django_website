@@ -1,0 +1,55 @@
+
+
+    <div class="sidebar">
+      <div class="sidebar-wrapper">
+        
+        <div class="logo">
+        </div>
+
+        {% if user.is_authenticated %}
+        <ul class="nav">
+          <li>
+            <a href="/">
+              <h3 class="text-dark">Dashboard</h3>
+            </a>
+          </li>
+          <li>
+            <a href="/news">
+              <h3 class="text-dark">News</h3>
+            </a>
+          </li>
+          <li>
+            <a href="/indicators">
+              <h3 class="text-dark">Indicators</h3>
+            </a>
+          </li>
+          <li>
+            <a href="/watch">
+              <h3 class="text-dark">Watch</h3>
+            </a>
+          </li>
+          <li>
+            <a href="/history">
+              <h3 class="text-dark">History</h3>
+            </a>
+          </li>
+          <li>
+            <a href="/rank">
+              <h3 class="text-dark">Rank</h3>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'user_settings' %}">
+              <h3 class="text-dark">Settings</h3>
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'logout' %}" >
+              <h3 class="text-dark">Logout</h3>
+            </a>
+          </li>
+        </ul>
+        {% endif %}
+        
+      </div>
+    </div>

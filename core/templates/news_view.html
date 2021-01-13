@@ -1,0 +1,119 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} News {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class = "row">
+  <div class = "col-6">
+    <h4> 
+      <div class="text-warning">
+        Last downloaded articles: {{ last_downloaded_articles }}
+      </div>
+    </h4>
+  </div>
+</div>
+{% for ticker, data in all_data.items %}
+  <div class="row"/>
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <p class="h3"/>
+            {{ ticker }} 
+            <button type="button" rel="tooltip" class="btn btn-success animation-on-hover btn-sm btn-icon">
+              <a href={{data.settings_url}}> 
+	        <img src="{% static 'assets/img/settings.png' %}"/>
+	      </a>                  
+	    </button>
+        </div>
+        <div class="card-body">
+          {% for sentiment, articles in data.items %}
+            {% if sentiment != "settings_url" and sentiment != "delete_url" %}
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="card-category">
+                      {% if sentiment == "Positive"%}
+                        <div class="text-success">
+                      {% else %}
+                        {% if sentiment == "Negative" %}
+                          <div class="text-danger">
+                        {% else %}
+                          <div class="text-warning">
+                        {% endif %}
+                      {% endif %} 
+                      {{sentiment}} </div>
+                    </h5>
+                  </div>
+                  <div class="card-body">
+                    {% for article in articles %}
+                      <div class="row">
+			{% if not article.read %}
+                          <div class="col-2 text-white">
+                            {{ article.date }}
+                          </div>
+			{% else %}
+			  <div class="col-2 text-gray-dark">
+		            {{ article.date }}
+			  </div>
+			{% endif %}
+                        <div class="col-9 text-left">
+                          {% if not article.read %}
+		                    <a class="text-primary" target="_blank" href="/article/{{ article.id }}/read/?next={{ article.url }}">
+		                      {{ article.title }}
+		                    </a>
+                          {% else %}
+		                    <a class="text-secondary" target="_blank" href="/article/{{ article.id }}/read/?next={{ article.url }}">
+		                      {{ article.title }}
+		                    </a>
+		          {% endif %}
+                        </div>
+                        <button type="button" rel="tooltip" class="btn btn-danger animation-on-hover btn-sm btn-icon">
+                          <a href={{article.delete_url}}>
+                            <img src="{% static 'assets/img/delete.png' %}"/>
+                          </a>
+                        </button>
+                      </div>
+                      <div class="row">
+                        <div class="col-12">
+                          {% if not article.read %}
+                            <p class="text-white">
+                              {{ article.text }}
+                            </p>
+                          {% else %}
+                            <p class="text-gray-dark">
+                              {{ article.text }}
+                            </p>
+                          {% endif %}
+                        </div>
+                      </div>
+                    {% endfor %}           
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>       
+  </div>
+{% endfor %}
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <script>
+    $(document).ready(function() {
+      // Javascript method's body can be found in assets/js/demos.js
+      demo.initDashboardPageCharts();
+
+    });
+  </script>
+
+{% endblock javascripts %}
+

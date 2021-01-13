@@ -1,0 +1,208 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} Dashboard {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+
+<div class="row">
+  <div class="col-12">
+    <div class="card alert alert-danger">
+      Server has been migrated to newer version. Mobile version has been disabled for now. WIP.
+    </div>	 
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="alert alert-warning">
+      Create download indicators task and celerybeat process. Mobile view in progress. ToDos: Finalise Indicator template. Remove download_user_stocks and replace by download_all_stocks_since. Find alternative for transaction alert mails. Find alternative to update sell_fees. Check pandas-ta library for indicator calculation. Use python library for plotting in order to validate downloaded data. Add collapsing and expanding cards for news api. Watch view wrong total for daily change. Add market for user as prices can differ acros market. Error in ranking (probably because grush subscribed and a date was chosen were nothing was found / start dec 11 / or weekend date was chosen). Check mifid2. Switch to tradingview api. Sort stocks. Obtain all stocks from yahoo finance tickers. Make it possible to change currency in settings and transaction create etc. Add bootstrap tab for watching stocks. Add button to sell stocks (goes to new transaction page with everything formatted to form already). Make alerts more user friendly. Add dDNS bash script for ip checking using email server. Update fake settings view and allow setting changes. Mails are send to everybody together in CC, use for loop. Net totals viewable in watch. Grush has negative net total for watch view. Error in download all stocks since somewhere, probably due to strings. Error with download news articles on create, probably because the input is not serialisable.
+    </div>	 
+  </div>
+</div>
+
+{% if device.is_small %}
+  {% include './mobile/transaction_overview_mobile.html' %}
+{% else %}
+  {% include './desktop/transaction_overview_desktop.html' %}
+{% endif %}
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
+
+
+<!-- Portfolio plot -->
+<script>
+  var ctx = document.getElementById('portfolio-plot').getContext('2d');
+
+  var style = getComputedStyle(document.body);
+  var textColor = style.getPropertyValue('--white');
+  var gainColor = style.getPropertyValue('--success');
+  var mainAttentionColor = style.getPropertyValue('--primary'); 
+
+  <!-- First add line to ctx variable -->
+  var myLineChart = new Chart(ctx, {
+      type: 'line',
+
+      data: {
+          labels: {{ portfolio_plot_labels|safe }},
+          datasets: [
+              {
+                  label: "Portfolio Value",
+                  data: {{portfolio_plot_data|safe}},
+                  yAxisID:'A',
+                  borderColor: textColor,
+                  labels: {{ portfolio_plot_labels|safe }}
+              },
+              {
+                  label: "Profit",
+                  data: {{portfolio_plot_profit|safe}},
+                  yAxisID:'B',
+                  borderColor: gainColor,
+                  labels: {{ portfolio_plot_labels|safe }}
+              }]
+      },
+
+      options: {
+          title: {
+              display: true,
+              text: "Portfolio history",
+              fontColor: mainAttentionColor,
+              fontSize: 22
+          },
+          legend: {
+              display: true,
+              labels: {
+                  fontColor: textColor,
+                  fontSize: 22
+              }
+          },
+          tooltips: {
+              intersect: false,
+              mode: 'index'
+          },
+          animation: {
+              duration: 0
+          },
+          scales: {
+              xAxes: [{
+                  type: 'time',
+                  time: {
+                      parser: 'YYYY-MM-DD'
+                  },
+                  ticks: {
+                      maxTicksLimit: 10,
+                      fontColor: textColor,
+                      fontSize: 18,
+                  },
+                  scaleLabel: {
+                      display: true,
+                      labelString: 'Date',
+                      fontColor: textColor,
+                      fontSize: 22
+                  }
+              }],
+              yAxes: [{
+                  type: 'linear',
+                  id: 'A',
+                  position: 'left',
+                  ticks: {
+                      fontColor: textColor,
+                      fontSize: 18 ,
+                  },
+                  scaleLabel: {
+                      display: true,
+                      labelString: 'Portfolio Value',
+                      fontColor: textColor,
+                      fontSize: 22
+                  }
+              },
+              {
+                  type: 'linear',
+                  id: 'B',
+                  position: 'right',
+                  ticks: {
+                      fontColor: gainColor,
+                      fontSize: 18 ,
+                  },
+                  scaleLabel: {
+                      display: true,
+                      labelString: 'Profit',
+                      fontColor: gainColor,
+                      fontSize: 22
+                  } 
+              }]
+          }
+      }
+  });
+</script>
+
+{% if diversification_chart_values|length != 1 or diversification_chart_values|first != "" %}
+<script>
+  var ctx = document.getElementById('portfolio-diversification-chart').getContext('2d');
+
+  var style = getComputedStyle(document.body);
+  var textColor = style.getPropertyValue('--white');
+  var gainColor = style.getPropertyValue('--success');
+  var mainAttentionColor = style.getPropertyValue('--primary');
+  var secondaryAttentionColor = style.getPropertyValue('--secondary');
+
+  var chart = new Chart(ctx, {
+    type: 'horizontalBar',
+    data: {
+      labels: {{ diversification_chart_labels | safe}}, <!-- Gives x axis location-->
+      datasets: [{
+        backgroundColor: {{ diversification_chart_colors | safe }},
+        label:"",  <!-- Label of the whole dataset -->
+        data: {{ diversification_chart_values | safe }}
+      }]
+    },
+    options: {
+      title: {
+        display: true,
+        text: 'Portfolio Diversification',
+        fontColor: mainAttentionColor,
+        fontSize: 22
+      },
+      legend: {
+        display: false
+      },
+      scales: {
+        xAxes: [{
+          ticks: {
+            beginAtZero: true,
+            fontColor: textColor,
+            fontSize: 18,
+          },
+          barPercentage: 0.6,
+          scaleLabel:{
+            display: true,
+            labelString: 'EUR',
+            fontColor: textColor,
+            fontSize: 22
+          }
+        }],
+        yAxes: [{
+          ticks: {
+            fontColor: textColor,
+            fontSize: 18,
+            autoSkip: false,
+          },
+          barPercentage: 0.4
+        }]
+      },
+      tooptips: {
+        enabled: false
+      } 
+    }
+  });
+</script>
+{% endif %}
+
+{% endblock javascripts %}

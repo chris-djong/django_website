@@ -1,0 +1,35 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} Delete Transaction {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="card text-white">
+      <div class="card-body"> 
+        <form action="." method="POST">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-12">
+              Do you want to delete the product "{{object.amount}}x {{object.stock}}"?
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              <a class="btn btn-danger btn-sm" href="/portfolio">
+                Cancel
+              </a>
+            </div>
+            <div class="col-2">
+              <input type="submit" value="Confirm"/>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>    
+{% endblock content %}

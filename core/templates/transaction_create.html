@@ -1,0 +1,128 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} Create Transaction {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-12">
+    <div class="card text-white">
+      <div class="card-body"> 
+        <form action="." method="POST">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-2">
+              Stock 
+            </div>
+            <div class="col-5">
+              {{ form.stock }} 
+            </div>
+            <div class="col-2"> 
+              <a class="btn btn-primary btn-sm" href="/stocks/create/">
+                +
+              </a>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Amount 
+            </div>
+            <div class="col-10">
+              {{ form.amount }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Label
+            </div>
+            <div class="col-10">
+              {{ form.label }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Date 
+            </div>
+            <div class="col-10">
+              {{ form.date_bought }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Price [EUR]
+            </div>
+            <div class="col-10">
+              {{ form.price_bought }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Fees [EUR]: 
+            </div>
+            <div class="col-10">
+              {{ form.buy_fees_constant }} + {{ form.buy_fees_linear }} x price_bought x amount 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Expected sell fees [EUR]: 
+            </div>
+            <div class="col-10">
+              {{ form.sell_fees_constant }} + {{ form.sell_fees_linear }} x price_bought x amount 
+            </div>
+          </div>    
+          <div class="row">
+            <div class=col-12>
+              {{ form.errors }}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              <a class="btn btn-danger btn-sm" href="/portfolio">
+                Cancel
+              </a>
+            </div>
+            <div class="col-2">
+              <input type="submit" value="Submit"/>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div id="footer-menu">
+    <table>
+      <tr>
+        <td class="footer-menu-item">Stock:</td><td class="footer-menu-item">The Stock you bought. In case it is not listed just create a new one.</td>
+      </tr>
+      <tr>
+        <td class="footer-menu-item">Amount:</td><td class="footer-menu-item">How many stocks you bought. In case you sold stock simply use a negative value.</td>
+      </tr>
+      <tr>
+        <td class="footer-menu-item">Label:</td><td class="footer-menu-item">This label is used to sort the stocks in your Overview and manage your diversification. In order to add mutiple labels to a stock use the a "/". Example: Cybersecurity/Data Mining/Biomedical</td>
+      </tr>
+      <tr>
+        <td class="footer-menu-item">Date:</td><td class="footer-menu-item">The date of the transaction. This date is used to retrieve the price. </td>
+      </tr>
+      <tr>
+        <td class="footer-menu-item">Price:</td><td class="footer-menu-item">Not required. The price per stock that you payed. In case you add your own price, the program wil automatically overwrite the value obtained using Date.</td>
+      </tr>
+      <tr>
+        <td class="footer-menu-item">Fees: </td><td class="footer-menu-item">The amount of fees you had to pay on top of the price. You can specify both a constant term and a linear term dependant on the price you paid for the stocks. Note that in case you create a sell transaction (negative amount) than the Fees are the sell fees and you are not required to enter the expected sell fees.</td>
+      </tr>
+    </table>
+</div>
+
+
+
+{% endblock content %}
+
+
+
+
+

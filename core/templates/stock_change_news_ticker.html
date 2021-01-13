@@ -1,0 +1,66 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+{% block title %} Settings {% endblock %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-body">   
+        <form action="." method="POST">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-2">
+              Name 
+            </div>
+            <div class="col-2">
+              {{ name }} 
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              Article ticker 
+            </div>
+            <div class="col-2">
+              {{ form.article_ticker }}
+            </div>
+          </div>
+          <div class="row">
+            <div class=col-12>
+              {{ form.errors }}
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-2">
+              <a class="btn btn-danger btn-sm" href="/news">
+                Cancel
+              </a>
+            </div>
+            <div class="col-2">
+              <input type="submit" value="Submit"/>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        Information
+      </div>
+      <div class="card-body">
+        The Article ticker is used to generate news from <a href="https://stocknewsapi.com" target="_blank">stocknewsapi.com</a>. Just use the test environment on their website to see what works.
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
