@@ -71,7 +71,7 @@ def news_view(request, *args, **kwargs):
                     i += 1
                     n_articles += 1
     # Render articles
-    my_context = {"all_data": articles, "last_downloaded_articles": last_downloaded_articles}
+    my_context = {"all_data": articles}
     return render(request, "news_view.html", my_context)
 
 
