@@ -28,6 +28,7 @@ def get_next_weekday(date, days=1):
 # Call for the yahoo finance api of the pandas_datareader function
 # Output pandas dataframe with ['Ticker','High','Low','Open','Close','Volume','Adj Close']
 def get_yahoo_finance(tickers, date):
+    print("Getting yahoo finance for tickers and date", tickers, date)
     result = data.get_data_yahoo(tickers, date, date)
     # We only desire to obtain data for one date
     result = result.iloc[0]
@@ -70,6 +71,7 @@ def get_currency_history(stock, date):
 # for the given date and returns whether the data has been retrieved with or without error
 def get_historical_data(ticker, date):
     try:
+        print("Getting historical data for ticker and date", ticker, date)
         data = get_yahoo_finance(ticker, date)
         # There was one case where data was None, it is not known yet when
         return data, True
@@ -255,6 +257,7 @@ def download_stocks_date(stocks, date):
     tickers = []
     for stock in stocks:
         tickers.append(stock.ticker)
+    print("Downloading stocks date, tickers given by", tickers)
     # Only  data from the given date is saved to the server.
     # During holidays for example the data should not be saved to the server
     # Obtain price
