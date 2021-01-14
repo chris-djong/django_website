@@ -25,14 +25,19 @@ def download_articles_since(transaction_id, date):
 @app.task
 def download_user_articles(username):
     user = User.objects.get(username=username)
+    
+    # Dont download article data in case user has not logged in in the last 7 days
+    last_login = user.last_login
+    today = datetime.date.today()
+    if (today - last_login).days < 7:
 
-    # We need to query all the transactions here, because the ones which have been sold will be deleted in case there are any left
-    transactions = get_portfolio(username)
+        # We need to query all the transactions here, because the ones which have been sold will be deleted in case there are any left
+        transactions = get_portfolio(username)
 
-    for transaction in transactions:
-        # In case we did not sell the article then download the newest articles
-        if transaction.date_sold is None:
-            download_articles(transaction)  # obtain the articles
+        for transaction in transactions:
+            # In case we did not sell the article then download the newest articles
+            if transaction.date_sold is None:
+                download_articles(transaction)  # obtain the articles
 
 
 # Function that downloads the articles for each user
