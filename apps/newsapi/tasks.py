@@ -16,6 +16,8 @@ def download_articles_since(transaction_id, date):
     transaction = Transaction.objects.get(id=transaction_id)
 
     # Just download the articles since one date before the given date to be sure
+    # Transform date object from celery serialization to datetime
+    date = datetime.date.fromisoformat(date.split("T")[0])
     date = get_prev_weekday(date)
     download_articles_since_date(transaction, date)
 

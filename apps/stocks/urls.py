@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import transaction_overview_view, transaction_creation_view, transaction_delete_view, stock_download_view, transaction_settings_view, transaction_settings_history_view, stock_creation_view, transaction_sell_view, coming_soon_view, transaction_watch_view, transaction_history_view, transaction_plot_view, transaction_rank_view, user_portfolio_download_view, daily_stocks_download_view, stock_change_article_ticker_view, transaction_download_view, download_stocks_user_view, transaction_settings_combined_view
+from .views import transaction_overview_view, transaction_creation_view, transaction_delete_view, stock_download_since_view, transaction_settings_view, transaction_settings_history_view, stock_creation_view, transaction_sell_view, coming_soon_view, transaction_watch_view, transaction_history_view, transaction_plot_view, transaction_rank_view, user_portfolio_download_view, stock_download_today_view, stock_change_article_ticker_view, transaction_download_view, transaction_settings_combined_view
 
 urlpatterns = [
     # Home
@@ -19,9 +19,8 @@ urlpatterns = [
     path('transactions/<int:id>/download/', transaction_download_view, name="download_transaction"),
 
     # Modify stocks
-    path('stocks/download/all/', download_stocks_user_view, name="download_stocks_user"),
-    path('stocks/download/today/', daily_stocks_download_view, name="download_stocks_today"),
-    path('stocks/download/since/', stock_download_view, name="download_stocks_since"),
+    path('stocks/download/today/', stock_download_today_view, name="download_stocks_today"),
+    path('stocks/download/since/', stock_download_since_view, name="download_stocks_since"),
     path('stocks/create/', stock_creation_view, name="create_stock"),
     path("stocks/<int:id>/change_news_ticker/", stock_change_article_ticker_view, name="news_view_change_stock"),
 

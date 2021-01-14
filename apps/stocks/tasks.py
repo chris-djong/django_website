@@ -260,11 +260,14 @@ def download_all_stocks_since(day, month, year, force_update=False):
         stocks = Stock.objects.all()
         download_stocks_since(day, month, year, stocks)
 
+
 # This function creates a UserPortfolio entry for all the stocks of a given user since its first buy
 # only needed by users/portfolio/download/
 @app.task
 def download_user_portfolio_history_since(username, date):
     # Loop through each day until today
+    # We first have to convert our datetime string to a datetime object
+    date = datetime.date.fromisoformat(date.split("T")[0])
     day_iterator = get_prev_weekday(date)
 
     today = datetime.date.today()

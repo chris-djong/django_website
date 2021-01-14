@@ -131,11 +131,8 @@ def transaction_creation_view(request, *args, **kwargs):
             transaction = my_form.save(commit=False)
             transaction.user = request.user
 
-            print("Creating transaction form is valid")
-
             # In case the user did not put in a price_bought date
             if transaction.price_bought is None:
-                print("Price bought has not been given, calculating.. ")
                 found = False
                 download_date = transaction.date_bought
                 if download_date.weekday() >= 5:
@@ -166,19 +163,12 @@ def transaction_creation_view(request, *args, **kwargs):
             # Save data and download stock data for the last 5 days
             transaction.save()
 
-            download_date = get_prev_weekday(datetime.date.today())
-            # ToDo: we can get problems here in case the market was closed for 3 days maybe? or has that been taken care of somewhere?
-            download_date = get_prev_weekday(download_date, days=4)
+            download_date = get_prev_weekday(datetime.date.today(), days=5)
             download_stock_since(day=download_date.day, month=download_date.month, year=download_date.year, stock=transaction.stock)
-
-            date = datetime.date(int(transaction.data['date_bought_year']), int(transaction.data['date_bought_month']), int(transaction.data['date_bought_day']))
-            date = get_prev_weekday(date)
-            download_user_portfolio_history_since.delay(username=request.user.username, date=date)
-
-            # Finally download the news articles so that a new user can see the information immediately
-            download_date = get_prev_weekday(download_date, days=4)
             download_articles_since.delay(transaction.id, download_date)
 
+            download_date = get_prev_weekday(transaction.date_bought, days=4)
+            download_user_portfolio_history_since.delay(username=request.user.username, date=download_date)
             return redirect("portfolio")
 
         else:
@@ -285,9 +275,8 @@ def user_portfolio_download_view(request):
     else:
         raise Http404("Page not found")
 
-# Boolean that keeps track on whether we are in the time loop already or not
 @login_required(login_url="login")
-def stock_download_view(request):
+def stock_download_since_view(request):
     if request.user.username == "chris":
         # Show form in case we came here using a GET request
         if request.method == "GET":
@@ -313,7 +302,7 @@ def stock_download_view(request):
 
 # In order to download all data from today (execute the celery task)
 @login_required(login_url="login")
-def daily_stocks_download_view(request):
+def stock_download_today_view(request):
     if request.user.username == "chris":
         download_all_user_stocks.delay()
         # And redirect to the portfolio
@@ -321,12 +310,6 @@ def daily_stocks_download_view(request):
 
     else: # in case its not me
         raise Http404("Page not found")
-
-@login_required(login_url="login")
-def download_stocks_user_view(request):
-    username = request.user.username
-    download_user_stocks.delay(username)
-    return redirect("/portfolio")
 
 
 # Change the news ticker of a given stock
