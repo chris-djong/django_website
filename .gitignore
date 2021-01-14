@@ -6,6 +6,7 @@ __pycache__/
 *.log
 .idea
 *.pytest_cache
+*.save
 
 env
 venv
