@@ -36,13 +36,6 @@ def get_yahoo_finance(tickers, date):
         result['Ticker'] = tickers
     return result
 
-# Calls the coinapi api for the retrieval of prices
-# Output pandas dataframe with ['Ticker', 'High', 'Low','Open','Close','Volume','Adj Close']
-def get_coinapi(ticker, date):
-    # Obtain key from database
-    url = "https://www.alphavantage.co/query?function=DIGITAL_CURRENCY_MONTHLY&symbol=BTC&market=CNY&apikey=%s" % (key)
-    response = requests.get(url)
-
 # Function which downloads the currency history object for a given date in case it does not exist yet and retrieves it from the database otherwise
 def get_currency_history(stock, date):
     # In case the currency is euro just leave it as is

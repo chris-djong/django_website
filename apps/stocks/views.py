@@ -4,8 +4,8 @@ from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .functions import get_transactions, get_portfolio, get_historical_data, get_prev_weekday, get_context, obtain_start_date, get_currency_history
-from .tasks import download_user_stocks, download_all_stocks_since, download_stock_since, download_all_user_portfolio_history, download_user_portfolio_history_since, download_all_user_stocks, merge_transactions
-from .forms import TransactionCreationForm, TransactionSettingsForm, TransactionSellForm, StockCreationForm, StockSettingsForm, TransactionWatchForm, UserForm, DateForm, TransactionPlotForm, DateRangeForm
+from .tasks import download_user_stocks, download_all_stocks_since, download_stock_since, download_all_user_portfolio_history, download_user_portfolio_history_since, merge_transactions, download_all_stocks_today
+from .forms import TransactionCreationForm, TransactionSettingsForm, TransactionSellForm, StockCreationForm, StockSettingsForm, TransactionWatchForm, UserForm, DateForm, DateRangeForm
 from .models import Transaction, StockPriceHistory, UserPortfolioHistory, Stock
 from django.contrib.auth.models import User
 from django.db.models.functions import Coalesce
@@ -304,7 +304,7 @@ def stock_download_since_view(request):
 @login_required(login_url="login")
 def stock_download_today_view(request):
     if request.user.username == "chris":
-        download_all_user_stocks.delay()
+        download_all_stoĉks_today.delay()
         # And redirect to the portfolio
         return  redirect("/portfolio")
 
@@ -472,13 +472,15 @@ def transaction_settings_view(request, id):
     else:
         raise Http404("No Stock matches the given query.")
 
+# View to download stocks of a given transaction
+# This view is currently required for the buttons in the transaction overview
 @login_required(login_url="login")
 def transaction_download_view(request, id, *args, **kwargs):
     transaction = get_object_or_404(Transaction, id=id)
 
     # obtain price today
     day = datetime.date.today()
-    
+
     # Download the data
     download_stock_since(day=day.day, month=day.month, year=day.year, stock=transaction.stock)
 

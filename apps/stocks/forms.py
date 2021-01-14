@@ -59,7 +59,3 @@ class TransactionWatchForm(forms.ModelForm):
         model = Transaction
         fields = ['user']
 
-# Form used to obtain plotting settings
-class TransactionPlotForm(forms.Form):
-    days = forms.IntegerField()
-

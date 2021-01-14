@@ -18,15 +18,6 @@ def send_alert_mail(user_mail, transaction, price_today, alert_value):
         message = "This is an automatic alert mail for %s\n\nThe price has fallen past you lower alert!\n\nCurrent price: %f\nAlert level: %f" % (transaction.stock, price_today, alert_value)
     send_mail.delay("alert@dejong.lu", [user_mail], subject, message)
 
-# Function that downloads the stocks of each current user
-# This function will be executed by the celerybeat process hourly
-@app.task
-def download_all_user_stocks():
-    users = User.objects.all()
-    for user in users:
-        download_user_stocks(user.username)
-
-
 # Function that merges multiple transactions that have the same ticker and sells the stocks in case we have both a buy and a sell 
 @app.task
 def merge_transactions(username):
@@ -148,7 +139,6 @@ def merge_transactions(username):
 # Download is only performed in case it has not been done in the last 60 minutes
 @app.task
 def download_user_stocks(username):
-
     user = User.objects.get(username=username)
     user_information = UserInformation.objects.get(user=user)
 
@@ -252,14 +242,20 @@ def download_stocks_since(day, month, year, stocks):
 # Download stock data for all stocks in Database
 # This functions downloads data for all the stocks
 @app.task
-def download_all_stocks_since(day, month, year, force_update=False):
-    today = datetime.date.today()
+def download_all_stocks_since(day, month, year):
     # Verify for no input of user
     if year != "" and day != "" and month != "":
         # We want to download all the stocks
         stocks = Stock.objects.all()
         download_stocks_since(day, month, year, stocks)
 
+# Function that downloads the stocks of each current user
+# This function will be executed by the celerybeat process hourly
+@app.task
+def download_all_stocks_today():
+    today = datetime.date.today()
+    stocks = Stock.objects.all()
+    download_stocks_date(stocks, today)
 
 # This function creates a UserPortfolio entry for all the stocks of a given user since its first buy
 # only needed by users/portfolio/download/
