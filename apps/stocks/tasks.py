@@ -211,7 +211,8 @@ def download_all_stocks_today():
 def download_user_portfolio_history_since(username, date):
     # Loop through each day until today
     # We first have to convert our datetime string to a datetime object
-    date = datetime.date.fromisoformat(date.split("T")[0])
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date.split("T")[0])
     day_iterator = get_prev_weekday(date)
 
     today = datetime.date.today()
@@ -246,7 +247,7 @@ def download_all_user_portfolio_history(username):
 # Function that verifies the current stock prices, updates the sell fees and verifies whether an alert has to be send
 def process_download_data(username):
     # Obtain current user
-    user = User.objects.get(username)
+    user = User.objects.get(username=username)
     
     portfolio = get_portfolio(username, combine=False)
 

@@ -28,8 +28,7 @@ def get_next_weekday(date, days=1):
 # Call for the yahoo finance api of the pandas_datareader function
 # Output pandas dataframe with ['Ticker','High','Low','Open','Close','Volume','Adj Close']
 def get_yahoo_finance(tickers, date):
-    result = yf.download(tickers, date)
-    # pdr.get_data_yahoo(tickers, date, date)
+    result = data.get_data_yahoo(tickers, date, date)
     # We only desire to obtain data for one date
     # TODO further todos includes splits etc as well even markets and currency can come from here. THis can enhance to user process significantly
     result = result.iloc[0]
@@ -73,7 +72,6 @@ def get_currency_history(stock, date):
 # for the given date and returns whether the data has been retrieved with or without error
 def get_historical_data(ticker, date):
     try:
-        print("Getting historical data for ticker and date", ticker, date)
         data = get_yahoo_finance(ticker, date)
         # There was one case where data was None, it is not known yet when
         return data, True
