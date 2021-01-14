@@ -8,9 +8,6 @@ import numpy as np
 def calc_sma(stock_data, date, window):
     # Finally obtain the exponential moving average of the given date
     sma = stock_data.rolling(window=window).mean()
-    print("SMA calculation:")
-    print("Stockdata", stock_data, "date", date, "window", window)
-    print("SMA", sma)
     sma_average = sma.loc[date.strftime("%Y-%m-%d")]["c"]
 
     return sma_average

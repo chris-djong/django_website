@@ -11,7 +11,10 @@ from ..stocks.functions import get_portfolio, get_prev_weekday, get_next_weekday
 
 # Function that downloads articles for a single transaction for a given date (used in create transaction for example)
 @app.task
-def download_articles_since(transaction, date):
+def download_articles_since(transaction_id, date):
+    # First obtain the transaction
+    transaction = Transaction.objects.get(id=transaction_id)
+
     # Just download the articles since one date before the given date to be sure
     date = get_prev_weekday(date)
     download_articles_since_date(transaction, date)

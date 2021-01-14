@@ -128,51 +128,56 @@ def transaction_creation_view(request, *args, **kwargs):
         my_form = TransactionCreationForm(request.POST)
         if my_form.is_valid():
             # First save the data but do not commit it yet 
-            data = my_form.save(commit=False)
-            data.user = request.user
+            transaction = my_form.save(commit=False)
+            transaction.user = request.user
+
+            print("Creating transaction form is valid")
+
             # In case the user did not put in a price_bought date
-            if data.price_bought is None:
+            if transaction.price_bought is None:
+                print("Price bought has not been given, calculating.. ")
                 found = False
-                date_bought = data.date_bought
-                if date_bought.weekday() >= 5:
-                    date_bought = get_prev_weekday(date_bought)
+                download_date = transaction.date_bought
+                if download_date.weekday() >= 5:
+                    download_date = get_prev_weekday(download_date)
 
                 # Safety measure for infinite loop
                 i = 0
                 while not found:
-                    i+=1
-                    if i==5:
+                    i += 1
+                    if i == 5:
                         data_bought = {"Close": -12345}
                         found = True
                         continue
 
-                    data_bought, found = get_historical_data(data.stock.ticker, date_bought)
-                    date_bought = get_prev_weekday(date_bought)
+                    data_bought, found = get_historical_data(transaction.stock.ticker, download_date)
+                    download_date = get_prev_weekday(download_date)
 
                 # Then obtain the current Currency/EUR price
-                to_eur = get_currency_history(data.stock, data.date_bought)
-                data.price_bought = round(data_bought["Close"]*to_eur, 2)
+                to_eur = get_currency_history(transaction.stock, download_date)
+                transaction.price_bought = round(data_bought["Close"]*to_eur, 2)
 
             # Calculate the buy fees based on constant and linear term
-            data.buy_fees = data.buy_fees_constant + data.buy_fees_linear*data.price_bought*data.amount
+            transaction.buy_fees = transaction.buy_fees_constant + transaction.buy_fees_linear*transaction.price_bought*transaction.amount
 
             # Same for sell fees, however the actual value is here calculated in download_stock function
-            data.sell_fees = 0 # actual sell_fees calculation performed later on in download_stock function
+            transaction.sell_fees = 0 # actual sell_fees calculation performed later on in download_stock function
 
             # Save data and download stock data for the last 5 days
-            data.save()
+            transaction.save()
 
             download_date = get_prev_weekday(datetime.date.today())
             # ToDo: we can get problems here in case the market was closed for 3 days maybe? or has that been taken care of somewhere?
-            for i in range(4):
-                download_date = get_prev_weekday(download_date)
-            download_stock_since(day=download_date.day, month=download_date.month, year=download_date.year, stock=data.stock)
-            download_user_portfolio_history_since.delay(username=request.user.username, date=data.date_bought)
+            download_date = get_prev_weekday(download_date, days=4)
+            download_stock_since(day=download_date.day, month=download_date.month, year=download_date.year, stock=transaction.stock)
+
+            date = datetime.date(int(transaction.data['date_bought_year']), int(transaction.data['date_bought_month']), int(transaction.data['date_bought_day']))
+            date = get_prev_weekday(date)
+            download_user_portfolio_history_since.delay(username=request.user.username, date=date)
 
             # Finally download the news articles so that a new user can see the information immediately
-            for i in range(4):
-                download_date = get_prev_weekday(download_date)
-            # download_articles_since.delay(data, download_date)
+            download_date = get_prev_weekday(download_date, days=4)
+            download_articles_since.delay(transaction.id, download_date)
 
             return redirect("portfolio")
 
@@ -248,9 +253,10 @@ def transaction_sell_view(request, id, *args, **kwargs):
                         i += 1
                         if i == 100:
                             data_sold = {"Adj Close": -123082}
+                            found = True
                         data_sold, found = get_historical_data(transaction.stock.ticker, date)
                         date = get_prev_weekday(date)
-                        continue
+
                     transaction.price_sold = data_sold["Adj Close"]
                 else:
                     transaction.price_sold = transaction_sell_form.data["price_sold"]
@@ -436,8 +442,6 @@ def transaction_settings_view(request, id):
                 transaction.stock = get_object_or_404(Stock, id=settings_form.data['stock'])
                 transaction.amount = settings_form.data['amount']
                 date = datetime.date(int(settings_form.data['date_bought_year']), int(settings_form.data['date_bought_month']), int(settings_form.data['date_bought_day']))
-                print("Transaction settings view date given by", date)
-                print("Transaction settings view date type given by", type(date))
                 if date.weekday() >= 5:
                     date = get_prev_weekday(date)
 
@@ -470,8 +474,7 @@ def transaction_settings_view(request, id):
                 # Download the stock data for the last couple of days
                 download_date = get_prev_weekday(datetime.date.today())
                 # ToDo: we can get problems here in case the market was closed for 3 days maybe? or has that been taken care of somewhere?
-                for i in range(3):
-                    download_date = get_prev_weekday(download_date)
+                download_date = get_prev_weekday(download_date, days=3)
                 download_stock_since(day=download_date.day, month=download_date.month, year=download_date.year, stock=transaction.stock)
 
                 # And download user portfolio history since the date bought that has been entered

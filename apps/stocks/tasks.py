@@ -22,7 +22,6 @@ def send_alert_mail(user_mail, transaction, price_today, alert_value):
 # This function will be executed by the celerybeat process hourly
 @app.task
 def download_all_user_stocks():
-    print("Downloading all user stocks")
     users = User.objects.all()
     for user in users:
         download_user_stocks(user.username)
@@ -149,8 +148,7 @@ def merge_transactions(username):
 # Download is only performed in case it has not been done in the last 60 minutes
 @app.task
 def download_user_stocks(username):
-    # Obtain required modules
-    download_days = 0
+
     user = User.objects.get(username=username)
     user_information = UserInformation.objects.get(user=user)
 
@@ -168,8 +166,6 @@ def download_user_stocks(username):
     for transaction in portfolio:
         # Download the stock to the database
         download_date = get_prev_weekday(datetime.date.today())
-        for i in range(download_days):
-            download_date = get_prev_weekday(download_date)
         download_stock_since(day=download_date.day, month=download_date.month, year=download_date.year, stock=transaction.stock)
 
         # And immediately retrieve all the information from the database to calculate totals
@@ -194,14 +190,12 @@ def download_user_stocks(username):
         transaction.save()
 
     # After the stocks have been downloaded for the amount of days we update the portfolio value in the database
-    day = datetime.date.today()
+    date = datetime.date.today()
 
     # Move to a weekday
-    day = get_next_weekday(day)
-    day = get_prev_weekday(day)
-    for i in range(download_days+1):
-        download_user_portfolio_history(day, user)
-        day = get_prev_weekday(day)
+    date = get_next_weekday(date)
+    date = get_prev_weekday(date, days=3)
+    download_user_portfolio_history_since(username, date)
 
 # Download stock data for a specific day and a specific stock
 # This function calls the yahoo finance API and downloads stock data since the given date

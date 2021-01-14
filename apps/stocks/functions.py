@@ -9,19 +9,21 @@ import datetime
 import os
 import sys 
 
-# Obtain the prev weekday
-def get_prev_weekday(day):
-    day -= datetime.timedelta(days=1)
-    while day.weekday() > 4: # Mon-Fri are 0-4
-        day -= datetime.timedelta(days=1)
-    return day
+# Obtain the prev weekday, specify how many weekdays in before we want
+def get_prev_weekday(date, days=1):
+    for _ in range(days):
+        date -= datetime.timedelta(days=1)
+        while date.weekday() > 4: # Mon-Fri are 0-4
+            date -= datetime.timedelta(days=1)
+    return date
 
-# Obtain the next weekday
-def get_next_weekday(day):
-    day += datetime.timedelta(days=1)
-    while day.weekday() > 4:
-        day += datetime.timedelta(days=1)
-    return day
+# Obtain the next weekday, specify how many weekdays in before we want
+def get_next_weekday(date, days=1):
+    for _ in range(days):
+        date += datetime.timedelta(days=1)
+        while date.weekday() > 4:
+            date += datetime.timedelta(days=1)
+    return date
 
 # Call for the yahoo finance api of the pandas_datareader function
 # Output pandas dataframe with ['Ticker','High','Low','Open','Close','Volume','Adj Close']
@@ -96,10 +98,16 @@ def get_historical_data(ticker, date):
 def get_portfolio(username, combine=True):
     user = User.objects.get(username=username)
     portfolio = Transaction.objects.filter(user=user, date_sold=None).order_by('label')
+    # In case we want to combine stocks, meaning multiple transactions of same stock are merged into one
     if combine:
-        portfolio_names = portfolio.values_list('stock', flat=True)
+        # First we have to obtain all the stock name excluding the Watching list, meaning amount of 0
+        # Generate portfolio without amount = 0 stocks
+        portfolio_non_0 = portfolio.exclude(amount=0)
 
-        # First find duplicates
+        # Then obtain the names of these stock
+        portfolio_names = portfolio_non_0.values_list('stock', flat=True)
+
+        # Next we have to find all the duplicates
         seen = {}  # dictionary which keeps track of the counts
         duplicates = []  # the ids that have duplicates (it does not matter how many)
         for portfolio_name in portfolio_names:
@@ -110,6 +118,8 @@ def get_portfolio(username, combine=True):
                     duplicates.append(portfolio_name)
                 seen[portfolio_name] += 1
 
+        # This is a list with transaction that has to be added at the end to the portfolio as in the following loop all
+        # the duplicates will automatically be removed from the portfolio
         transactions_to_add = []
         # Loop through all the duplicates
         for duplicate in duplicates:
