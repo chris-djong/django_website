@@ -4,7 +4,6 @@ from .functions import download_articles_since_date, download_articles
 from core.celery import app
 from django.contrib.auth.models import User
 from ..mail_relay.tasks import send_mail
-from authentication.models import UserInformation
 import datetime
 from ..stocks.functions import get_portfolio, get_prev_weekday, get_next_weekday
 
@@ -26,12 +25,6 @@ def download_articles_since(transaction_id, date):
 @app.task
 def download_user_articles(username):
     user = User.objects.get(username=username)
-    user_information = UserInformation.objects.get(user=user)
-
-    # And update the time that we last downloaded the articles
-    # Do this immediately so that once it is done we do not enter this if condition again after refreshing and refreshing
-    user_information.last_downloaded_articles = datetime.datetime.now(datetime.timezone.utc)
-    user_information.save()
 
     # We need to query all the transactions here, because the ones which have been sold will be deleted in case there are any left
     transactions = get_portfolio(username)
@@ -46,7 +39,6 @@ def download_user_articles(username):
 # This function will be executed by the celerybeat process daily
 @app.task
 def download_all_user_articles():
-    print("Download all user articles..")
     users = User.objects.all()
 
     # Delete all the articles that are older than 7 days  

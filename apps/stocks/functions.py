@@ -2,8 +2,7 @@ from .models import Stock, Transaction, StockPriceHistory, UserPortfolioHistory,
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from pandas_datareader import data as pdr
-import fix_yahoo_finance as yf
+from pandas_datareader import data
 from pandas_datareader._utils import RemoteDataError
 from requests.exceptions import ReadTimeout, ConnectTimeout, ConnectionError
 import datetime
@@ -29,14 +28,16 @@ def get_next_weekday(date, days=1):
 # Call for the yahoo finance api of the pandas_datareader function
 # Output pandas dataframe with ['Ticker','High','Low','Open','Close','Volume','Adj Close']
 def get_yahoo_finance(tickers, date):
-    print("Getting yahoo finance for tickers and date", tickers, date)
-    result = yf.download(tickers, date, date)
+    result = yf.download(tickers, date)
+    # pdr.get_data_yahoo(tickers, date, date)
     # We only desire to obtain data for one date
+    # TODO further todos includes splits etc as well even markets and currency can come from here. THis can enhance to user process significantly
     result = result.iloc[0]
     # Add the ticker to the result
     if isinstance(tickers, str):
         result['Ticker'] = tickers
     return result
+
 
 # Function which downloads the currency history object for a given date in case it does not exist yet and retrieves it from the database otherwise
 def get_currency_history(stock, date):
@@ -255,36 +256,9 @@ def download_stock_date(stock, date):
 
 def download_stocks_date(stocks, date):
     # We need to convert the input from stock database objects to string tickers for the yahoo finance api
-    tickers = []
+    tickers = ""
     for stock in stocks:
-        tickers.append(stock.ticker)
-    print("Downloading stocks date, tickers given by", tickers)
-    # Only  data from the given date is saved to the server.
-    # During holidays for example the data should not be saved to the server
-    # Obtain price
-    data, data_from_date = get_historical_data(tickers, date)
-
-    # Save the stock to the database in case the data is from today
-    if data_from_date:
-        data = data["Adj Close"]
-        for ticker in data.index:
-            # First delete all the current values in case there are any
-            stock = get_object_or_404(Stock, ticker=ticker)
-            stock_price_date = StockPriceHistory.objects.filter(date=date, ticker=stock)
-            stock_price_date.delete()
-            # Then obtain the current Currency/EUR price
-            to_eur = get_currency_history(stock, date)
-
-            # High low open close
-            h = round(data["High"]*to_eur, 2)
-            l = round(data["Low"]*to_eur, 2)
-            o = round(data["Open"]*to_eur, 2)
-            c = round(data["Close"]*to_eur, 2)
-
-            # And finally save the history
-            # We have to use stock_id here because we renamed ticker to stock, django can not handle that apparently
-            stock_history = StockPriceHistory.objects.create(ticker=stock, date=date, h=h, l=l, o=o, c=c)
-            stock_history.save()
+        download_stock_date(stock, date)
 
 # Function that retrieves the price of a given stock at a given date from the database
 # It returns both the price and whether the price has been retrieved from the given date or the day before
@@ -553,4 +527,3 @@ def download_user_portfolio_history(date, user):
     # Calculate portfolio value and store it in database
     user_portfolio_history = UserPortfolioHistory.objects.create(user=user, date=date, cash=total_cash, net=total_net, price=total_portfolio, profit=total_profit, invested=total_invested)
     user_portfolio_history.save()
-

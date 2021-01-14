@@ -10,7 +10,6 @@ from django.contrib.auth.models import User
 from ..stocks.functions import get_portfolio
 from .models import Article
 from .tasks import download_user_articles, download_all_user_articles
-from authentication.models import UserInformation
 from ..stocks.forms import UserForm
 
 
@@ -20,8 +19,6 @@ def news_view(request, *args, **kwargs):
     # Identify user and pull his stocks
     username = request.user.username
     user = User.objects.get(username=username)
-    user_information = UserInformation.objects.get(user=user)
-    last_downloaded_articles = user_information.last_downloaded_articles
 
     # This time we only need the current portfolio as it is assumed that the transactions that have been sold are deleted already
     portfolio = get_portfolio(username)

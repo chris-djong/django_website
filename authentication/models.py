@@ -11,8 +11,6 @@ from django.contrib.auth.models import User
 # General model that adds general information to the User that is useful to several modules
 class UserInformation(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    last_downloaded_stocks = models.DateTimeField(null=True)
-    last_downloaded_articles = models.DateTimeField(null=True)
 
     def __str__(self):
         return self.user.username

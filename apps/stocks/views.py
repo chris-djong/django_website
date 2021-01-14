@@ -4,12 +4,11 @@ from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .functions import get_transactions, get_portfolio, get_historical_data, get_prev_weekday, get_context, obtain_start_date, get_currency_history
-from .tasks import download_user_stocks, download_all_stocks_since, download_stock_since, download_all_user_portfolio_history, download_user_portfolio_history_since, merge_transactions, download_all_stocks_today
+from .tasks import download_all_stocks_since, download_stock_since, download_all_user_portfolio_history, download_user_portfolio_history_since, merge_transactions, download_all_stocks_today
 from .forms import TransactionCreationForm, TransactionSettingsForm, TransactionSellForm, StockCreationForm, StockSettingsForm, TransactionWatchForm, UserForm, DateForm, DateRangeForm
 from .models import Transaction, StockPriceHistory, UserPortfolioHistory, Stock
 from django.contrib.auth.models import User
 from django.db.models.functions import Coalesce
-from authentication.models import UserInformation
 import time
 import matplotlib as mplt
 import pandas as pd 
@@ -91,9 +90,6 @@ def transaction_overview_view(request, *args, **kwargs):
             daily_change = 0
             daily_change_perc = 0
 
-    # Obtain user information model for totals and last downloaded stocks
-    user_information = get_object_or_404(UserInformation, user=request.user)
-    last_downloaded_stocks = user_information.last_downloaded_stocks
 
     try:
         initial_total_stocks = round(user_portfolio_history[0].invested, 2)
@@ -578,8 +574,6 @@ def transaction_watch_view(request, *arg, **kwargs):
                 except (IndexError, ZeroDivisionError):
                     daily_change_perc = 0
 
-            # Obtain user information model for totals and last downloaded stocks
-            user_information = get_object_or_404(UserInformation, user=request.user)
 
             try:
                 initial_total_stocks = round(user_portfolio_history[0].invested, 2)

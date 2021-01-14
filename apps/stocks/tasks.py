@@ -1,7 +1,6 @@
 from .models import Transaction, Stock, StockPriceHistory, UserPortfolioHistory
 from .functions import get_context, get_transactions, get_portfolio, download_stocks_date, download_stock_date, get_next_weekday, get_prev_weekday, get_stock_price_date, download_user_portfolio_history
 from ..mail_relay.tasks import send_mail
-from authentication.models import UserInformation
 import datetime
 from django.contrib.auth.models import User
 from core.celery import app
@@ -17,6 +16,7 @@ def send_alert_mail(user_mail, transaction, price_today, alert_value):
         subject = "Lower alert %s" % (transaction.stock)
         message = "This is an automatic alert mail for %s\n\nThe price has fallen past you lower alert!\n\nCurrent price: %f\nAlert level: %f" % (transaction.stock, price_today, alert_value)
     send_mail.delay("alert@dejong.lu", [user_mail], subject, message)
+
 
 # Function that merges multiple transactions that have the same ticker and sells the stocks in case we have both a buy and a sell 
 @app.task
@@ -133,59 +133,6 @@ def merge_transactions(username):
                     buy.delete()
 
 
-# Download stock data for specific User
-# This function calls the download_stock_since function to retrieve data from yahoo finance for 0 days and then stores it in the database
-# After that, the totals are computed for the relevant user and stored in the database as well
-# Download is only performed in case it has not been done in the last 60 minutes
-@app.task
-def download_user_stocks(username):
-    user = User.objects.get(username=username)
-    user_information = UserInformation.objects.get(user=user)
-
-    # In case we havent downloaded them in more than an hour then just download them again
-    # if difference_seconds > 60: #  or username == 'chris':
-    # Immediately save time to user so that refreshing does not send new processes to celeryd
-    # ToDo: Do this at higher level somewhere
-    user_information.last_downloaded_stocks = datetime.datetime.now(datetime.timezone.utc)
-    user_information.save()
-
-    # Obtain portfolio transaction of the user
-    portfolio = get_portfolio(username, combine=False)
-
-    # And download each transaction to the database
-    for transaction in portfolio:
-        # Download the stock to the database
-        download_date = get_prev_weekday(datetime.date.today())
-        download_stock_since(day=download_date.day, month=download_date.month, year=download_date.year, stock=transaction.stock)
-
-        # And immediately retrieve all the information from the database to calculate totals
-        transaction_context = get_context(transaction)
-
-        # Check whether an alert has been exceeded
-        price_today = transaction_context["current_price"]
-        price_yesterday = price_today - transaction_context["daily_change"]
-        # Lower alert
-        if transaction.lower_alert is not None:
-            if price_today < transaction.lower_alert and price_yesterday >= transaction.lower_alert:
-                send_alert_mail(user.email, transaction, price_today, transaction.lower_alert)
-                transaction.lower_alert = None
-        # Upper alert
-        if transaction.upper_alert is not None:
-            if price_today > transaction.upper_alert and price_yesterday <= transaction.upper_alert:
-                send_alert_mail(user.email, transaction, price_today, transaction.upper_alert)
-                transaction.upper_alert = None
-
-        # Set the sell fees
-        transaction.sell_fees = transaction.sell_fees_constant + transaction.sell_fees_linear*transaction_context["amount"]*transaction_context["current_price"]
-        transaction.save()
-
-    # After the stocks have been downloaded for the amount of days we update the portfolio value in the database
-    date = datetime.date.today()
-
-    # Move to a weekday
-    date = get_next_weekday(date)
-    date = get_prev_weekday(date, days=3)
-    download_user_portfolio_history_since(username, date)
 
 # Download stock data for a specific day and a specific stock
 # This function calls the yahoo finance API and downloads stock data since the given date
@@ -256,6 +203,7 @@ def download_all_stocks_today():
     today = datetime.date.today()
     stocks = Stock.objects.all()
     download_stocks_date(stocks, today)
+    process_all_download_data()
 
 # This function creates a UserPortfolio entry for all the stocks of a given user since its first buy
 # only needed by users/portfolio/download/
@@ -294,5 +242,46 @@ def download_all_user_portfolio_history(username):
 
     download_user_portfolio_history_since(username, initial_date)
 
+
+# Function that verifies the current stock prices, updates the sell fees and verifies whether an alert has to be send
+def process_download_data(username):
+    # Obtain current user
+    user = User.objects.get(username)
+    
+    portfolio = get_portfolio(username, combine=False)
+
+    for transaction in portfolio:
+        transaction_context = get_context(transaction)
+
+        # Check whether an alert has been exceeded
+        price_today = transaction_context["current_price"]
+        price_yesterday = price_today - transaction_context["daily_change"]
+        # Lower alert
+        if transaction.lower_alert is not None:
+            if price_today < transaction.lower_alert and price_yesterday >= transaction.lower_alert:
+                send_alert_mail(user.email, transaction, price_today, transaction.lower_alert)
+                transaction.lower_alert = None
+        # Upper alert
+        if transaction.upper_alert is not None:
+            if price_today > transaction.upper_alert and price_yesterday <= transaction.upper_alert:
+                send_alert_mail(user.email, transaction, price_today, transaction.upper_alert)
+                transaction.upper_alert = None
+
+        # Set the sell fees
+        transaction.sell_fees = transaction.sell_fees_constant + transaction.sell_fees_linear*transaction_context["amount"]*transaction_context["current_price"]
+
+        # And save the transaction
+        transaction.save()
+
+    date = get_prev_weekday(datetime.date.today(), days=4)
+    download_user_portfolio_history_since(username, date)
+
+
+# Function that loops through all the users to process the download data such as user information models, sell fees and alerts
+def process_all_download_data():
+    users = User.objects.all()
+    for user in users:
+        username = user.username
+        process_download_data(username)
 
 
