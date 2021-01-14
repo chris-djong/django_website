@@ -2,7 +2,8 @@ from .models import Stock, Transaction, StockPriceHistory, UserPortfolioHistory,
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from pandas_datareader import data
+from pandas_datareader import data as pdr
+import fix_yahoo_finance as yf
 from pandas_datareader._utils import RemoteDataError
 from requests.exceptions import ReadTimeout, ConnectTimeout, ConnectionError
 import datetime
@@ -29,7 +30,7 @@ def get_next_weekday(date, days=1):
 # Output pandas dataframe with ['Ticker','High','Low','Open','Close','Volume','Adj Close']
 def get_yahoo_finance(tickers, date):
     print("Getting yahoo finance for tickers and date", tickers, date)
-    result = data.get_data_yahoo(tickers, date, date)
+    result = yf.download(tickers, date, date)
     # We only desire to obtain data for one date
     result = result.iloc[0]
     # Add the ticker to the result

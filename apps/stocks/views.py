@@ -304,7 +304,7 @@ def stock_download_since_view(request):
 @login_required(login_url="login")
 def stock_download_today_view(request):
     if request.user.username == "chris":
-        download_all_stoĉks_today.delay()
+        download_all_stocks_today.delay()
         # And redirect to the portfolio
         return  redirect("/portfolio")
 
