@@ -37,6 +37,9 @@ class Stock(models.Model):
         else:
             return "%s" % (self.name)
 
+    class Meta:
+        ordering = ["name"]
+
 # Model keeping track of the user portfolio history
 # Price gives the current portfolio value
 # Profit the profit of that date
