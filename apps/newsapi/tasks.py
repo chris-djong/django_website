@@ -28,7 +28,11 @@ def download_user_articles(username):
     
     # Dont download article data in case user has not logged in in the last 7 days
     last_login = user.last_login
-    today = datetime.date.today()
+    if last_login is None:
+        return
+    
+    last_login = last_login.replace(tzinfo=None)
+    today = datetime.datetime.today()
     if (today - last_login).days < 7:
 
         # We need to query all the transactions here, because the ones which have been sold will be deleted in case there are any left
