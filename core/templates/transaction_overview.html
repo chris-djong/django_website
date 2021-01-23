@@ -10,7 +10,7 @@
 <!-- Initial alerts for users -->
 <div class="row">
   <div class="col-12">
-    <div class="alert alert-warning hide-in-mobile">
+    <div class="alert alert-warning">
       ToDos: Check Mike alibaba price_bought - Add market to stock and remove currency as prices can differ across market. Add button to sell stocks (goes to new transaction page with everything formatted to form already). Update fake settings view and allow setting changes. Mails are send to everybody together in CC, use for loop. Test Cryptos. Keep old api - new api for indicators. Dont download stocks if entry present already. Add mobile templates. Disable viewport zooming. Use fixed width and auto margin for desktop. JS add bottom of page for speed improvements. JS for context possibility?. Check news iex api. Add balance sheet, key stats and dividends (with download dates). Remove user download ability. </div>
   </div>
 </div>
@@ -33,15 +33,15 @@
             <thead class="text-primary">
               <tr class="d-flex">
                 <th class="col-4">
-                Ticker 
+                  Ticker 
                 </th>
-                <th class="col-1 text-right">
+                <th class="col-1 text-right hide-in-mobile">
                   Amount
                 </th>
-                <th class="col-1 text-right">
+                <th class="col-1 text-right hide-in-mobile">
                   Initial Price
                 </th>
-                <th class="col-1 text-right">
+                <th class="col-1 text-right hide-in-mobile">
                   Current Price
                 </th>
                 <th class="col-1 text-right">
@@ -51,7 +51,7 @@
                   Net Total
                 </th>
                 <th class="col-1 text-right">
-                    Total Profit
+                  Total Profit
                 </th>
                 <th class="col-2 text-right">
                   Actions
@@ -63,7 +63,7 @@
             <!-- We loop through all the labels with the given stocks -->
             {% for label, stocks in queryset.items %}
               <!-- Create a row which contains only the label name for the overview -->
-              <tr class="d-flex">
+              <tr>
                 <td class="col-3"> 
                   <p class="text-primary">
                     {{label}}
@@ -75,113 +75,132 @@
               <!-- And create a stock entry for each object -->
               <tr class="d-flex">
                 <td class="col-4">
-                  {{stock.name}} ({{stock.ticker}})
+                  <span class="hide-in-mobile">{{stock.name}} (</span>{{stock.ticker}}<span class="hide-in-mobile"></span>)</span>
                 </td>
-                <td class="col-1 text-right">
+                <td class="col-1 text-right hide-in-mobile">
                   {{stock.amount}}
                 </td>
-                <td class="col-1 text-right">
-                    {{stock.initial_price}}
+                <td class="col-1 text-right hide-in-mobile">
+                  {{stock.initial_price}}
                 </td>
-                  <td class="col-1 text-right">
-                    {{stock.current_price}}
+                <td class="col-1 text-right hide-in-mobile">
+                  {{stock.current_price}}
                 </td>
-                  {% if stock.daily_change > 0 %}
-                  {% if stock.exchange_closed %}
-                    <td class="col-1 text-right"> 
-                    <span class="text-warning">
+                {% if stock.daily_change > 0 %}
+                {% if stock.exchange_closed %}
+                <td class="col-1 text-right"> 
+                  <span class="text-warning hide-in-mobile">
                     {{ stock.daily_change }}
                   </span> 
                   <span class="text-success">
                     ({{ stock.daily_change_perc }}%)
                   </span>
-                  </td>
-                    {% else %} 
-                      {% if stock.daily_change_perc > 3 %}
-                      <td class="col-1 text-right bg-success">
-            <span class="text-black">
-                          {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
-            </span>
-                      </td>
-                    {% else %}
-                      <td class="col-1 text-right">
-                        <div class="text-success">
-                            {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
-                          </div>
-                      </td>
-                    {% endif %}
-                    {% endif %}
-                    {% else %}
-                    {% if stock.exchange_closed %}
-                      <td class="col-1 text-right">
-                    <span class="text-warning">
-                      {{ stock.daily_change }}
-                    </span> 
-                    <span class="text-danger">
-                      ({{ stock.daily_change_perc }}%)
-                      </span>
-                    </td>
-                    {% else %}
-                      {% if stock.daily_change_perc < -3 %}
-                      <td class="col-1 text-right bg-danger">
-                        {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
-                      </td>
-                    {% else %}
-                      <td class="col-1 text-right">
-                          <div class="text-danger">
-                            {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
-                          </div>
-                      </td>
-                    {% endif %}
-                    {% endif %}
-                  {% endif %}
-            <td class="col-1 text-right">
+                </td>
+                {% else %}  {# if the exchange is open #}
+                {% if stock.daily_change_perc > 3 %}
+                <td class="col-1 text-right bg-success">
+                  <span class="text-black hide-in-mobile">
+                    {{ stock.daily_change }} 
+                  </span> 
+                  <span class="text-black">
+                    ({{ stock.daily_change_perc }}%)
+                  </span>
+                </td>
+                {% else %}  {# if stock daily change perc <=3 and > 0 #}
+                <td class="col-1 text-right">
+                  <span class="text-success hide-in-mobile">
+                    {{ stock.daily_change }} 
+                  </span>
+                  <span class="text-success">
+                    ({{ stock.daily_change_perc }}%)
+                  </span>
+                </td>
+                {% endif %}  {# ending daily_change_perc > 3 if #}
+                {% endif %}  {# ending exchange_closed if #}
+                {% else %}  {# meaning daily_change is now <=0 #}
+                {% if stock.exchange_closed %}
+                <td class="col-1 text-right">
+                  <span class="text-warning hide-in-mobile">
+                    {{ stock.daily_change }}
+                  </span> 
+                  <span class="text-danger">
+                    ({{ stock.daily_change_perc }}%)
+                  </span>
+                </td>
+                {% else %}   {# if exchange is open #}
+                {% if stock.daily_change_perc < -3 %}
+                <td class="col-1 text-right bg-danger">
+                  <span class="hide-in-mobile">
+                    {{ stock.daily_change }} 
+                  </span> 
+                  <span>
+                    ({{ stock.daily_change_perc }}%)
+                  </span>
+                </td>
+                {% else %}  {# if daily_change_perc >= -3 and <= 0#}
+                <td class="col-1 text-right">
+                  <span class="text-danger hide-in-mobile">
+                    {{ stock.daily_change }}
+                  </span>
+                  <span class="text-danger hide-in-mobile">
+                    ({{ stock.daily_change_perc }}%)
+                  </span>
+                </td>
+                {% endif %}  {# ending daily_change_perc < -3 if #}
+                {% endif %}  {# ending exchange_closed if #}
+                {% endif %}  {# ending daily_change > 0 if #}
+                <td class="col-1 text-right">
                   {{ stock.current_total_net }}
                 </td>
                 {% if stock.total_profit > 0 %}
-                  <td class="col-1 text-right">
-                    <div class="text-success">
-                      {{stock.total_profit}} ({{ stock.total_profit_perc }}%)
-                      </div>
-                  </td>
-                {% else %}
-                  {% if stock.total_profit < 0%}
-                    <td class="col-1 text-right">
-                      <div class="text-danger">
-                        {{stock.total_profit}} ({{ stock.total_profit_perc }}%)
-                        </div>
-                    </td>
-                  {% else %}
-                      <td class="col-1 text-right">
-                      {{ stock.total_profit}} ({{ stock.total_profit_perc }}%)
+                <td class="col-1 text-right">
+                  <span class="text-success hide-in-mobile">
+                    {{stock.total_profit}} 
+                  </span>
+                  <span class="text-success">
+                    ({{ stock.total_profit_perc }}%)
+                  </span>
                 </td>
-                  {% endif %}
-                {% endif %}
-
-                  <td class="col-2 td-actions text-right">
-                    <button type="button" rel="tooltip" class="btn btn-info animation-on-hover btn-sm btn-icon">
-                      <a href={{stock.plot_link}}>
+                {% else %}  {# if total profit negative #}
+                {% if stock.total_profit != 0 %}
+                <td class="col-1 text-right">
+                  <span class="text-danger hide-in-mobile">
+                    {{stock.total_profit}} 
+                  </span>
+                  <span class="text-danger">
+                    ({{ stock.total_profit_perc }}%)
+                  </span>
+                </td>
+                {% else %}  {# total profit is 0 #}
+                <td class="col-1 text-right">
+                  <span class="hide-in-mobile">
+                    {{stock.total_profit}} 
+                  </span>
+                  <span>
+                    ({{ stock.total_profit_perc }}%)
+                  </span>
+                </td>
+                {% endif %}  {# total profit != 0 #}
+                {% endif %}  {# total profit > 0 #}
+                <td class="col-2 td-actions text-right">
+                  <button type="button" rel="tooltip" class="btn btn-info animation-on-hover btn-sm btn-icon">
+                    <a href={{stock.plot_link}}>
                       <img src="{% static 'assets/img/plot.png' %}"/>
-                  </a>
-                </button>
-                    <button type="button" rel="tooltip" class="btn btn-success animation-on-hover btn-sm btn-icon">
-                      <a href={{stock.settings_link}}> 
+                    </a>
+                  </button>
+                  <button type="button" rel="tooltip" class="btn btn-success animation-on-hover btn-sm btn-icon">
+                    <a href={{stock.settings_link}}> 
                       <img src="{% static 'assets/img/settings.png' %}"/>
-                  </a>                  
-                </button>
-                    <button type="button" rel="tooltip" class="btn btn-default animation-on-hover btn-sm btn-icon">
-                      <a href={{stock.download_link}}>
-                        <img src="{% static 'assets/img/download.png' %}"/>
-                      </a>
-                    </button>
-                    <button type="button" rel="tooltip" class="btn btn-danger animation-on-hover btn-sm btn-icon">
-                      <a href={{stock.delete_link}}>
-                        <img src="{% static 'assets/img/delete.png' %}"/>
-                      </a>
-                    </button>
-                  </td>
+                    </a>                  
+                  </button>
+                  <button type="button" rel="tooltip" class="btn btn-danger animation-on-hover btn-sm btn-icon">
+                    <a href={{stock.delete_link}}>
+                      <img src="{% static 'assets/img/delete.png' %}"/>
+                    </a>
+                  </button>
+                </td>
               </tr>
-              {% endfor %}
+              {% endfor %}  {# ending loop through stocks in queryset #}
               
               {% if forloop.last %}
               <!-- The last iteration contains the free cash flow, the add transaction buttons and the totals -->
@@ -203,7 +222,7 @@
                   {{current_total_cash}}
                 </td>
               </tr>
-              {% endif %}
+              {% endif %}   {# ending current total cash != 0 #}
               
               <!-- Then an empty row for visibility purposes -->
               <tr>
@@ -230,7 +249,7 @@
                 {% if not daily_from_today %}
                 {% if daily_change_perc > 0 %}
                 <td class="col-1 text-right"> 
-                  <span class="text-warning">
+                  <span class="text-warning hide-in-mobile">
                     {{ daily_change }}
                   </span> 
                   <span class="text-success">
@@ -240,7 +259,7 @@
                 {% else %}  {# this is for daily_change_perc <= 0 #}
                 {% if daily_change_perc < 0 %}
                 <td class="col-1 text-right"> 
-                  <span class="text-warning">
+                  <span class="text-warning hide-in-mobile">
                     {{ daily_change }}
                   </span> 
                   <span class="text-danger">
@@ -249,46 +268,63 @@
                 </td>
                 {% else %}  {# this is for daily_change_perc == 0 #}
                 <td class="col-1 text-right"> 
-                  <span class="text-warning">
+                  <span class="text-warning hide-in-mobile">
                     {{ daily_change }}
                   </span> 
                   <span class="text-warning">
                     ({{ daily_change_perc }}%)
                   </span>
                 </td>
-                {% endif %}  
-                {% endif %}  
+                {% endif %}  {# ending daily change perc < 0 #}
+                {% endif %}  {# ending daily change perc > 0 #}
                 {% else %}  {# else so if daily_from_today #}
                 {% if daily_change_perc > 3 %}
                 <td class="col-1 text-right text-black bg-success">
+                  <span class="text-black hide-in-mobile">
+                    {{daily_change}} 
+                  </span>
                   <span class="text-black">
-                    {{daily_change}} ({{daily_change_perc}}%)
+                    ({{daily_change_perc}}%)
                   </span>
                 </td>
                 {% else %} {# this is for daily_change_perc <= 3 #}
                 {% if daily_change_perc > 0 %}
                 <td class="col-1 text-right">
-                  <div class="text-success">
-                    {{daily_change}} ({{daily_change_perc}}%)
-                  </div>
+                  <span class="text-success hide-in-mobile">
+                    {{daily_change}} 
+                  </span>
+                  <span class="text-success">
+                    ({{daily_change_perc}}%)
+                  </span>
                 </td>
                 {% else %} {# this is for daily_change_perc <= 0 #}
                 {% if daily_change_perc < -3 %}
                 <td class="col-1 text-right bg-danger">
-                  {{daily_change}} ({{daily_change_perc}}%)
+                  <span class="hide-in-mobile">
+                    {{daily_change}} 
+                  </span>
+                  <span>
+                    ({{daily_change_perc}}%)
+                  </span> 
                 </td>
                 {% else %} {# this is for daily_change_perc between 0 and -3 #}
                 {% if daily_change_perc < 0 %}
-                <td class="col-1 text-right">
-                  <div class="text-danger">
-                    {{daily_change}} ({{daily_change_perc}}%)
-                  </div>
+                <td class="col-1 text-right text-danger">
+                  <span class="hide-in-mobile">
+                    {{daily_change}} 
+                  </span>
+                  <span>
+                    ({{daily_change_perc}}%)
+                  </span> 
                 </td>
                 {% else %}  {# this is for daily_change_perc == 0 #}
-                <td class="col-1 text-right">
-                  <div class="text-warning">
-                    {{daily_change}} ({{daily_change_perc}}%)
-                  </div>
+                <td class="col-1 text-right text-warning">
+                  <span class="hide-in-mobile">
+                    {{daily_change}} 
+                  </span>
+                  <span>
+                    ({{daily_change_perc}}%)
+                  </span> 
                 </td>
                 {% endif %}
                 {% endif %}
@@ -301,16 +337,22 @@
                 </td>
                 <!-- Total profit -->
                 {% if current_total_profit > 0 %}  
-                <td class="col-1 text-right">
-                  <div class="text-success">
-                    {{current_total_profit}} ({{current_total_profit_perc}}%)
-                  </div>
+                <td class="col-1 text-right text-success">
+                  <span class="hide-in-mobile">
+                    {{current_total_profit}} 
+                  </span>
+                  <span>
+                    ({{current_total_profit_perc}}%)
+                  </span>
                 </td>
                 {% else %}  {# this is for current_total_profit <= 0 #}
-                <td class="col-1 text-right">
-                  <div class="text-danger">
-                    {{current_total_profit}} ({{current_total_profit_perc}}%)
-                  </div>
+                <td class="col-1 text-right text-danger">
+                  <span class="hide-in-mobile">
+                    {{current_total_profit}} 
+                  </span>
+                  <span>
+                    ({{current_total_profit_perc}}%)
+                  </span>
                 </td>
                 {% endif %}
               </tr>
@@ -332,10 +374,13 @@
               <td class="text-left col-9">
                 Total
               </td>
-              <td class="text-left col-1">
-                <div class="text-warning">
-                  {{current_total_profit}} ({{current_total_profit_perc}}%)
-                </div>
+              <td class="text-left col-1 text-warning">
+                <span class="hide-in-mobile">
+                  {{current_total_profit}} 
+                </span>
+                <span>
+                  ({{current_total_profit_perc}}%)
+                </span>
               </td>
             </tr>
             {% endif %}
