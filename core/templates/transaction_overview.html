@@ -7,36 +7,380 @@
 
 {% block content %}
 
-
-<div class="row">
-  <div class="col-12">
-    <div class="card alert alert-danger">
-      Multiple stocks have been updated. ALL prices in app are currently displayed in EURO.  
-    </div>	 
-  </div>
-</div>
-
+<!-- Initial alerts for users -->
 <div class="row">
   <div class="col-12">
     <div class="alert alert-warning">
-ToDos: Check Mike alibaba price_bought - Add market to stock and remove currency as prices can differ across market. Add button to sell stocks (goes to new transaction page with everything formatted to form already). Update fake settings view and allow setting changes. Mails are send to everybody together in CC, use for loop. Test Cryptos. Keep old api - new api for indicators. Dont download stocks if entry present already. Add mobile templates. Disable viewport zooming. Use fixed width and auto margin for desktop. JS add bottom of page for speed improvements. JS for context possibility?. Check news iex api. Add balance sheet, key stats and dividends (with download dates). Remove user download ability. </div>
+      ToDos: Check Mike alibaba price_bought - Add market to stock and remove currency as prices can differ across market. Add button to sell stocks (goes to new transaction page with everything formatted to form already). Update fake settings view and allow setting changes. Mails are send to everybody together in CC, use for loop. Test Cryptos. Keep old api - new api for indicators. Dont download stocks if entry present already. Add mobile templates. Disable viewport zooming. Use fixed width and auto margin for desktop. JS add bottom of page for speed improvements. JS for context possibility?. Check news iex api. Add balance sheet, key stats and dividends (with download dates). Remove user download ability. </div>
   </div>
 </div>
 
-{% if device.is_small %}
-  {% include './mobile/transaction_overview_mobile.html' %}
-{% else %}
-  {% include './desktop/transaction_overview_desktop.html' %}
-{% endif %}
-{% endblock content %}
+<!-- Main Portfolio Tables -->
+<div class="row">
+  <div class="col-12">
+    <!-- Card in which Table is located -->
+    <div class="card">
+      <!-- Set Header of overal card-->
+      <div class="card-header">
+        <h4 class="card-title">Portfolio</h4>
+      </div>
+      <!--Set Body of overal card -->
+      <div class="card-body">
+        <!-- And create the responsive table for the Portfolio -->
+        <div class="table-responsive">
+          <table class="table" style="white-space: nowrap;">
+            <!-- Column headers for the current portfolio -->
+            <thead class="text-primary">
+              <tr class="d-flex">
+                <th class="col-4">
+                Ticker 
+                </th>
+                <th class="col-1 text-right">
+                  Amount
+                </th>
+                <th class="col-1 text-right">
+                  Initial Price
+                </th>
+                <th class="col-1 text-right">
+                  Current Price
+                </th>
+                <th class="col-1 text-right">
+                  24h Change
+                </th> 
+                <th class="col-1 text-right">
+                  Net Total
+                </th>
+                <th class="col-1 text-right">
+                    Total Profit
+                </th>
+                <th class="col-2 text-right">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <!-- The body for the current portfolio -->
+            <tbody>
+            <!-- We loop through all the labels with the given stocks -->
+            {% for label, stocks in queryset.items %}
+              <!-- Create a row which contains only the label name for the overview -->
+              <tr class="d-flex">
+                <td class="col-3"> 
+                  <p class="text-primary">
+                    {{label}}
+                  </p>
+                </td>
+              </tr>
+              <!-- Then we can loop through all the stocks of this label-->
+              {% for stock in stocks %}
+              <!-- And create a stock entry for each object -->
+              <tr class="d-flex">
+                <td class="col-4">
+                  {{stock.name}} ({{stock.ticker}})
+                </td>
+                <td class="col-1 text-right">
+                  {{stock.amount}}
+                </td>
+                <td class="col-1 text-right">
+                    {{stock.initial_price}}
+                </td>
+                  <td class="col-1 text-right">
+                    {{stock.current_price}}
+                </td>
+                  {% if stock.daily_change > 0 %}
+                  {% if stock.exchange_closed %}
+                    <td class="col-1 text-right"> 
+                    <span class="text-warning">
+                    {{ stock.daily_change }}
+                  </span> 
+                  <span class="text-success">
+                    ({{ stock.daily_change_perc }}%)
+                  </span>
+                  </td>
+                    {% else %} 
+                      {% if stock.daily_change_perc > 3 %}
+                      <td class="col-1 text-right bg-success">
+            <span class="text-black">
+                          {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
+            </span>
+                      </td>
+                    {% else %}
+                      <td class="col-1 text-right">
+                        <div class="text-success">
+                            {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
+                          </div>
+                      </td>
+                    {% endif %}
+                    {% endif %}
+                    {% else %}
+                    {% if stock.exchange_closed %}
+                      <td class="col-1 text-right">
+                    <span class="text-warning">
+                      {{ stock.daily_change }}
+                    </span> 
+                    <span class="text-danger">
+                      ({{ stock.daily_change_perc }}%)
+                      </span>
+                    </td>
+                    {% else %}
+                      {% if stock.daily_change_perc < -3 %}
+                      <td class="col-1 text-right bg-danger">
+                        {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
+                      </td>
+                    {% else %}
+                      <td class="col-1 text-right">
+                          <div class="text-danger">
+                            {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
+                          </div>
+                      </td>
+                    {% endif %}
+                    {% endif %}
+                  {% endif %}
+            <td class="col-1 text-right">
+                  {{ stock.current_total_net }}
+                </td>
+                {% if stock.total_profit > 0 %}
+                  <td class="col-1 text-right">
+                    <div class="text-success">
+                      {{stock.total_profit}} ({{ stock.total_profit_perc }}%)
+                      </div>
+                  </td>
+                {% else %}
+                  {% if stock.total_profit < 0%}
+                    <td class="col-1 text-right">
+                      <div class="text-danger">
+                        {{stock.total_profit}} ({{ stock.total_profit_perc }}%)
+                        </div>
+                    </td>
+                  {% else %}
+                      <td class="col-1 text-right">
+                      {{ stock.total_profit}} ({{ stock.total_profit_perc }}%)
+                </td>
+                  {% endif %}
+                {% endif %}
+
+                  <td class="col-2 td-actions text-right">
+                    <button type="button" rel="tooltip" class="btn btn-info animation-on-hover btn-sm btn-icon">
+                      <a href={{stock.plot_link}}>
+                      <img src="{% static 'assets/img/plot.png' %}"/>
+                  </a>
+                </button>
+                    <button type="button" rel="tooltip" class="btn btn-success animation-on-hover btn-sm btn-icon">
+                      <a href={{stock.settings_link}}> 
+                      <img src="{% static 'assets/img/settings.png' %}"/>
+                  </a>                  
+                </button>
+                    <button type="button" rel="tooltip" class="btn btn-default animation-on-hover btn-sm btn-icon">
+                      <a href={{stock.download_link}}>
+                        <img src="{% static 'assets/img/download.png' %}"/>
+                      </a>
+                    </button>
+                    <button type="button" rel="tooltip" class="btn btn-danger animation-on-hover btn-sm btn-icon">
+                      <a href={{stock.delete_link}}>
+                        <img src="{% static 'assets/img/delete.png' %}"/>
+                      </a>
+                    </button>
+                  </td>
+              </tr>
+              {% endfor %}
+              
+              {% if forloop.last %}
+              <!-- The last iteration contains the free cash flow, the add transaction buttons and the totals -->
+              {% if current_total_cash != 0 %}
+              <!-- Row with Label Cash -->
+              <tr class="d-flex">
+                <td class="col-4 text-left">
+                  <p class="text-primary">
+                    Cash
+                  </p>
+                </td>
+              </tr>
+              <!-- Row containing the Free Cash Flow Stock-->
+              <tr class="d-flex">
+                <td class="col-7 text-left">
+                  Free Cash Flow
+                </td>
+                <td class="col-1 text-right">
+                  {{current_total_cash}}
+                </td>
+              </tr>
+              {% endif %}
+              
+              <!-- Then an empty row for visibility purposes -->
+              <tr>
+                <td>
+                  </br> <!--</br> is needed here as otherwise the cell has a lower height -->
+                </td> 
+              </tr>
+        
+              <!-- Row containg the Add Transaction button -->
+              <tr class="d-flex">
+                <td class="col-4" >
+                  <a href="/transactions/create" class="btn btn-primary" role="button">
+                    Add Transaction
+                  </a>
+                </td>
+              </tr>
+
+              <!-- Row containing total -->
+              <tr class="d-flex">
+                <td class="text-left col-7">
+                  Total
+                </td>
+                <!-- Total daily change perc-->
+                {% if not daily_from_today %}
+                {% if daily_change_perc > 0 %}
+                <td class="col-1 text-right"> 
+                  <span class="text-warning">
+                    {{ daily_change }}
+                  </span> 
+                  <span class="text-success">
+                    ({{ daily_change_perc }}%)
+                  </span>
+                </td>
+                {% else %}  {# this is for daily_change_perc <= 0 #}
+                {% if daily_change_perc < 0 %}
+                <td class="col-1 text-right"> 
+                  <span class="text-warning">
+                    {{ daily_change }}
+                  </span> 
+                  <span class="text-danger">
+                    ({{ daily_change_perc }}%)
+                  </span>
+                </td>
+                {% else %}  {# this is for daily_change_perc == 0 #}
+                <td class="col-1 text-right"> 
+                  <span class="text-warning">
+                    {{ daily_change }}
+                  </span> 
+                  <span class="text-warning">
+                    ({{ daily_change_perc }}%)
+                  </span>
+                </td>
+                {% endif %}  
+                {% endif %}  
+                {% else %}  {# else so if daily_from_today #}
+                {% if daily_change_perc > 3 %}
+                <td class="col-1 text-right text-black bg-success">
+                  <span class="text-black">
+                    {{daily_change}} ({{daily_change_perc}}%)
+                  </span>
+                </td>
+                {% else %} {# this is for daily_change_perc <= 3 #}
+                {% if daily_change_perc > 0 %}
+                <td class="col-1 text-right">
+                  <div class="text-success">
+                    {{daily_change}} ({{daily_change_perc}}%)
+                  </div>
+                </td>
+                {% else %} {# this is for daily_change_perc <= 0 #}
+                {% if daily_change_perc < -3 %}
+                <td class="col-1 text-right bg-danger">
+                  {{daily_change}} ({{daily_change_perc}}%)
+                </td>
+                {% else %} {# this is for daily_change_perc between 0 and -3 #}
+                {% if daily_change_perc < 0 %}
+                <td class="col-1 text-right">
+                  <div class="text-danger">
+                    {{daily_change}} ({{daily_change_perc}}%)
+                  </div>
+                </td>
+                {% else %}  {# this is for daily_change_perc == 0 #}
+                <td class="col-1 text-right">
+                  <div class="text-warning">
+                    {{daily_change}} ({{daily_change_perc}}%)
+                  </div>
+                </td>
+                {% endif %}
+                {% endif %}
+                {% endif %}
+                {% endif %}
+                {% endif %}
+                <!-- Total net -->
+                <td class="col-1 text-right">
+                  {{current_total_net}}
+                </td>
+                <!-- Total profit -->
+                {% if current_total_profit > 0 %}  
+                <td class="col-1 text-right">
+                  <div class="text-success">
+                    {{current_total_profit}} ({{current_total_profit_perc}}%)
+                  </div>
+                </td>
+                {% else %}  {# this is for current_total_profit <= 0 #}
+                <td class="col-1 text-right">
+                  <div class="text-danger">
+                    {{current_total_profit}} ({{current_total_profit_perc}}%)
+                  </div>
+                </td>
+                {% endif %}
+              </tr>
+              {% endif %}  
+            {% endfor %} 
+          
+            {% if queryset|length == 0  %}
+            <!-- Row containg the Add Stock button -->
+            <tr class="d-flex">
+              <td class="col-3">
+                <a href="/transactions/create" class="btn btn-primary" role="button">
+                  Add Transaction
+                </a>
+              </td>
+            </tr>
+
+            <!-- Row containing totals if we have no stocks -->
+            <tr class="d-flex">
+              <td class="text-left col-9">
+                Total
+              </td>
+              <td class="text-left col-1">
+                <div class="text-warning">
+                  {{current_total_profit}} ({{current_total_profit_perc}}%)
+                </div>
+              </td>
+            </tr>
+            {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Profit History plot --> 
+<div class="row">
+  <div class="col-12">
+    <div class="card card-chart">
+      <div class="card-header">
+        <h5 class="card-category">Profit History</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="portfolio-plot"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Portfolio Diversification plot-->
+<div class="row">
+  <div class="col-12">
+    <div class="card card-chart">
+      <div class="card-header">
+        <h5 class="card-category">Portfolio Diversification</h5>
+      </div>
+      <div class="card-body">
+        <canvas id="portfolio-diversification-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
 
 
-<!-- Portfolio plot -->
+<!-- Portfolio History script -->
 <script>
   var ctx = document.getElementById('portfolio-plot').getContext('2d');
 
@@ -142,6 +486,7 @@ ToDos: Check Mike alibaba price_bought - Add market to stock and remove currency
   });
 </script>
 
+<!-- Portfolio Diversification script -->
 {% if diversification_chart_values|length != 1 or diversification_chart_values|first != "" %}
 <script>
   var ctx = document.getElementById('portfolio-diversification-chart').getContext('2d');
@@ -205,3 +550,4 @@ ToDos: Check Mike alibaba price_bought - Add market to stock and remove currency
 {% endif %}
 
 {% endblock javascripts %}
+{% endif %}
