@@ -54,10 +54,15 @@
 }
 
 /* Create media function to hide columns in mobile */
-@media (min-width: var(--breakpoint-xs)) and (max-width: var(--breakpoint-md)){
+@media (min-width: var(--breakpoint-xs)){
     .hide-in-mobile{
       display: none;
     }
+}
+
+@media (min-width: var(--breakpoint-md)){
+  .hide-in-mobile{
+  }
 }
 
 *,
