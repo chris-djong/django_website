@@ -53,6 +53,13 @@
   --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
+/* Create media function to hide columns in mobile */
+@media (min-width: var(--breakpoint-xs)) and (max-width: var(--breakpoint-md)){
+    .hide-in-mobile{
+      display: none;
+    }
+}
+
 *,
 *::before,
 *::after {
