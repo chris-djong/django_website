@@ -409,6 +409,7 @@ def get_context(transaction):
     # Store all the columns
     context["id"] = transaction.id
     context["ticker"] = transaction.stock.ticker
+    context['portfolio'] = transaction.portfolio
     context["name"] = transaction.stock.name
     context["amount"] = transaction.amount
     context["initial_price"] = round(transaction.price_bought, 2)

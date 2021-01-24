@@ -22,14 +22,20 @@ def transaction_overview_view(request, *args, **kwargs):
     merge_transactions(username)
     portfolio = get_portfolio(username)
 
-    # List with dictionaries for final context to template
-    queryset = {}     # queryset = {"label1": [transaction1, transaction2, transaction3], "label2: [transaction1, transaction2, transaction3]"} 
+    # List with dictionaries for final context to template 
+    # queryset = {"label1": [transaction1, transaction2, transaction3], "label2: [transaction1, transaction2, transaction3]"} 
+    querysets = {}    # querysets = {1: queryset1, 2: queryset2, 3: queryset3}  --> for the different portfolios that the user can create
     # Also create the datasets for the diversification chart
     diversification_chart_dict = {}
 
     for transaction in portfolio:
         ## Calculate and store relevant data
         transaction_context = get_context(transaction)
+        
+        # Check whether we created the portfolio already
+        portfolio_id = transaction_context["portfolio"]
+        if portfolio_id not in querysets:
+            querysets[portfolio_id] = {}
 
         # Set label to string for error handling
         if (transaction.label is None):
@@ -43,9 +49,9 @@ def transaction_overview_view(request, *args, **kwargs):
             # We only add the first label to the queryset for generation of the overview
             if i == 0:
                 if label in queryset:
-                    queryset[label].append(transaction_context)
+                    querysets[portfolio_id][label].append(transaction_context)
                 else:
-                    queryset[label] = [transaction_context, ]
+                    querysets[portfolio_id][label] = [transaction_context, ]
             # All the other labels are added to the diversification chart in case they are not part of the watching
             if label != "Watching":
                 if label in diversification_chart_dict:
@@ -111,7 +117,7 @@ def transaction_overview_view(request, *args, **kwargs):
         current_total_profit_perc = round(current_total_profit/initial_total_stocks*100, 2)
 
     # Add all the required variables to the context for processing by the template
-    my_context = {"daily_change": daily_change, "daily_change_perc": daily_change_perc, "queryset": queryset, "portfolio_plot_labels": portfolio_plot_labels, "portfolio_plot_data": portfolio_plot_data, "portfolio_plot_profit": portfolio_plot_profit, "current_total_net": current_total_net, "initial_total_stocks": initial_total_stocks, "current_total": current_total_stocks,"current_total_profit":current_total_profit, "current_total_profit_perc":current_total_profit_perc, "diversification_chart_labels": diversification_chart_labels, "diversification_chart_values":diversification_chart_values, "diversification_chart_colors": diversification_chart_colors, "daily_from_today": daily_from_today, "current_total_cash": current_total_cash}
+    my_context = {"daily_change": daily_change, "daily_change_perc": daily_change_perc, "querysets": querysets, "portfolio_plot_labels": portfolio_plot_labels, "portfolio_plot_data": portfolio_plot_data, "portfolio_plot_profit": portfolio_plot_profit, "current_total_net": current_total_net, "initial_total_stocks": initial_total_stocks, "current_total": current_total_stocks,"current_total_profit":current_total_profit, "current_total_profit_perc":current_total_profit_perc, "diversification_chart_labels": diversification_chart_labels, "diversification_chart_values":diversification_chart_values, "diversification_chart_colors": diversification_chart_colors, "daily_from_today": daily_from_today, "current_total_cash": current_total_cash}
     return render(request, "transaction_overview.html", my_context)
 
 # View for creation of new stocks

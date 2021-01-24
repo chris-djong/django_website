@@ -11,20 +11,36 @@
 <div class="row">
   <div class="col-12">
     <div class="alert alert-warning">
-      ToDos: Check total for queryset of 0 - Check Mike alibaba price_bought - Add market to stock and remove currency as prices can differ across market. Add button to sell stocks (goes to new transaction page with everything formatted to form already). Update fake settings view and allow setting changes. Mails are send to everybody together in CC, use for loop. Test Cryptos. Keep old api - new api for indicators. Dont download stocks if entry present already. Add mobile templates. Disable viewport zooming. Use fixed width and auto margin for desktop. JS add bottom of page for speed improvements. JS for context possibility?. Check news iex api. Add balance sheet, key stats and dividends (with download dates). Remove user download ability. </div>
+      ToDos: Add mobile/medium/desktop accessibility - Check total for queryset of 0 - Check Mike alibaba price_bought - Add market to stock and remove currency as prices can differ across market. Add button to sell stocks (goes to new transaction page with everything formatted to form already). Update fake settings view and allow setting changes. Mails are send to everybody together in CC, use for loop. Test Cryptos. Keep old api - new api for indicators. Dont download stocks if entry present already. Add mobile templates. Disable viewport zooming. Use fixed width and auto margin for desktop. JS add bottom of page for speed improvements. JS for context possibility?. Check news iex api. Add balance sheet, key stats and dividends (with download dates). Remove user download ability. </div>
   </div>
 </div>
 
-<!-- Main Portfolio Tables -->
+<!-- Main Portfolio Table -->
 <div class="row">
   <div class="col-12">
     <!-- Card in which Table is located -->
     <div class="card">
       <!-- Set Header of overal card-->
       <div class="card-header">
-        <h4 class="card-title">Portfolio</h4>
+        <ul class="nav nav-pills card-header" role="tablist">
+          {% for portfolio_id in querysets.keys %}
+          {% if forloop.first %} 
+          <li class="nav-item">
+            <a class="nav-link active card-title" data-toggle="pill" href="#{{ portfolio_id }}">Portfolio</a>
+          </li>
+          {% else %} {# in case we are not in the first loop #}
+          <li class="nav-item">
+            <a class="nav-link card-title" data-toggle="pill" href="#{{ portfolio_id }}">Portfolio</a>
+          </li>
+          {% endif %} {# for loop first #}
+          {% endfor %}  {# loop through portfolio_ids #}
+          <li class="nav-item">
+            <a class="nav-link card-title" data-toggle="pill" href="/portfolio/create">Add Portfolio</a>
+          </li>
+        </ul>
       </div>
 
+      {% for portfolio_id, queryset in querysets.items %}
       <!--Mobile View Body 2-3-3-2-2 cell configuration -->
       <div class="card-body hide-in-desktop">
         <!-- And create the responsive table for the Portfolio -->
@@ -65,7 +81,6 @@
               <!-- Then we can loop through all the stocks of this label-->
               {% for stock in stocks %}
               <!-- And create a stock entry for each object -->
-              <!-- Row which is only shown in mobile -->
               <tr class="d-flex">
                 <td class="col-2">
                   {{stock.ticker}}
@@ -166,7 +181,7 @@
                   </p>
                 </td>
               </tr>
-              <!-- Row containing the Free Cash Flow Stock in mobile -->
+              <!-- Row containing the Free Cash Flow Stock -->
               <tr class="d-flex">
                 <td class="col-6 text-left">
                   Free Cash Flow
@@ -193,7 +208,7 @@
                 </td>
               </tr>
 
-              <!-- Row containing total in mobile -->
+              <!-- Row containing total -->
               <tr class="d-flex show-in-mobile">
                 <td class="text-left col-2">
                   Total
@@ -597,6 +612,7 @@
           </table>
         </div>
       </div>
+      {% endfor %}
     </div>
   </div>
 </div>

@@ -78,6 +78,7 @@ class StockPriceHistory(models.Model):
 class Transaction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    portfolio = models.IntegerField(default=0)
     amount = models.FloatField()
     label = models.CharField(max_length=1000, null=True, blank=True)
     # This boolean is only used to check whether the transaction is a merged transaction in the overview. This makes it possible to handle the settings and plots for example 
