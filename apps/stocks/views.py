@@ -24,7 +24,7 @@ def transaction_overview_view(request, *args, **kwargs):
 
     # List with dictionaries for final context to template 
     # queryset = {"label1": [transaction1, transaction2, transaction3], "label2: [transaction1, transaction2, transaction3]"} 
-    querysets = {}    # querysets = {1: queryset1, 2: queryset2, 3: queryset3}  --> for the different portfolios that the user can create
+    querysets = {}    # querysets = {"portfolio_name": {queryset1, daily_change1, net_total1, profit1}, "portfolio_name_2": {queryset2, daily_change2, net_total2, profit2} }  --> for the different portfolios that the user can create
     # Also create the datasets for the diversification chart
     diversification_chart_dict = {}
 
@@ -33,9 +33,19 @@ def transaction_overview_view(request, *args, **kwargs):
         transaction_context = get_context(transaction)
         
         # Check whether we created the portfolio already
-        portfolio_id = transaction_context["portfolio"]
-        if portfolio_id not in querysets:
-            querysets[portfolio_id] = {}
+        portfolio = transaction_context["portfolio"]
+        if portfolio not in querysets:
+            querysets[portfolio]['queryset'] = {}
+            querysets[portfolio]['daily_change'] = 0
+            querysets[portfolio]['net_total'] = 0
+            querysets[portfolio]['profit'] = 0
+            querysets[portfolio]['invested'] = 0
+        
+        querysets[portfolio]['daily_change'] += transaction_context["daily_change"]
+        querysets[portfolio]['net_total'] += transaction_context["current_total_net"]
+        querysets[portfolio]['profit'] += transaction_context["total_profit"]
+        querysets[portfolio]['invested'] +=  transaction_context["amount"]*transaction_context["initial_price"] + transaction_context["buy_fees"] + transaction_context["sell_fees"]
+        querysets[portfolio]['total'] += transaction_context["current_total_stocks"]
 
         # Set label to string for error handling
         if (transaction.label is None):
@@ -48,16 +58,24 @@ def transaction_overview_view(request, *args, **kwargs):
             label = labels[i]
             # We only add the first label to the queryset for generation of the overview
             if i == 0:
-                if label in querysets[portfolio_id]:
-                    querysets[portfolio_id][label].append(transaction_context)
+                if label in querysets[portfolio_id]['queryset']:
+                    querysets[portfolio_id]['queryset'][label].append(transaction_context)
                 else:
-                    querysets[portfolio_id][label] = [transaction_context, ]
+                    querysets[portfolio_id]['queryset'][label] = [transaction_context, ]
             # All the other labels are added to the diversification chart in case they are not part of the watching
             if label != "Watching":
                 if label in diversification_chart_dict:
                     diversification_chart_dict[label] += transaction_context["amount"]*transaction_context["current_price"]
                 else:
                     diversification_chart_dict[label] = transaction_context["amount"]*transaction_context["current_price"] 
+    
+    # Calculated percentages
+    for portfolio in querysets.keys():
+        querysets[portfolio]['daily_change_perc'] = round(querysets[portfolio]['daily_change']/querysets[portfolio]['total'], 2)
+        querysets[portfolio]['daily_change'] = round(querysets[portfolio]['daily_change'], 2)
+        querysets[portfolio]['profit'] = round(querysets[portfolio]['profit'], 2)
+        querysets[portfolio]['profit_perc'] = round(querysets[portfolio]['profit']/querysets[portfolio]['invested'], 2)
+        querysets[portfolio]['total_net'] = round(querysets[portfolio]['total_net'], 2)
 
 
     # Now convert the diversification_chart_dict to values comprehended by chart.js
@@ -122,16 +140,19 @@ def transaction_overview_view(request, *args, **kwargs):
 
 # View for creation of new stocks
 @login_required(login_url="login")
-def transaction_creation_view(request, *args, **kwargs):
+def transaction_creation_view(request, portfolio, *args, **kwargs):
     if request.method == "GET":
         today = datetime.datetime.today()
-        my_form = TransactionCreationForm(initial= {"date_bought": today, "portfolio": "Portfolio"})
+        my_form = TransactionCreationForm(initial= {"date_bought": today, "portfolio": portfolio})
     elif request.method == "POST":
         my_form = TransactionCreationForm(request.POST)
         if my_form.is_valid():
             # First save the data but do not commit it yet 
             transaction = my_form.save(commit=False)
             transaction.user = request.user
+
+            if transaction.portfolio is None:
+                transaction.portfolio = "Portfolio"
 
             # In case the user did not put in a price_bought date
             if transaction.price_bought is None:

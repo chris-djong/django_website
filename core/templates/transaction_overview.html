@@ -10,6 +10,12 @@
 <!-- Initial alerts for users -->
 <div class="row">
   <div class="col-12">
+    <div class="alert alert-danger">
+      Added Portfolio management option. Just change the portfolio setting of your transaction to obtain a second overview.
+    </div>
+</div>
+<div class="row">
+  <div class="col-12">
     <div class="alert alert-warning">
       ToDos: Add mobile/medium/desktop accessibility - Check total for queryset of 0 - Check Mike alibaba price_bought - Add market to stock and remove currency as prices can differ across market. Add button to sell stocks (goes to new transaction page with everything formatted to form already). Update fake settings view and allow setting changes. Mails are send to everybody together in CC, use for loop. Test Cryptos. Keep old api - new api for indicators. Dont download stocks if entry present already. Add mobile templates. Disable viewport zooming. Use fixed width and auto margin for desktop. JS add bottom of page for speed improvements. JS for context possibility?. Check news iex api. Add balance sheet, key stats and dividends (with download dates). Remove user download ability. </div>
   </div>
@@ -38,7 +44,7 @@
       </div>
 
       <div class="tab-content">
-      {% for portfolio, queryset in querysets.items %}
+      {% for portfolio, portfolio_items in querysets.items %}
         {% if forloop.first %} 
         <div id="p{{portfolio}}" class="container tab-pane active">
         {% else %}
@@ -72,7 +78,7 @@
                 <!-- The body for the current portfolio -->
                 <tbody>
                 <!-- We loop through all the labels with the given stocks -->
-                {% for label, stocks in queryset.items %}
+                {% for label, stocks in portfolio_items.queryset.items %}
                   <!-- Create a row which contains only the label name for the overview -->
                   <tr>
                     <td class="col-3"> 
@@ -205,16 +211,79 @@
                   <!-- Row containg the Add Transaction button -->
                   <tr class="d-flex">
                     <td class="col-12" >
-                      <a href="/transactions/create" class="btn btn-primary" role="button">
+                      <a href="/transactions/{{ portfolio }}/create/" class="btn btn-primary" role="button">
                         Add Transaction
                       </a>
                     </td>
                   </tr>
 
-                  <!-- Row containing total -->
+                  <!-- Row containing portfolio totals -->
                   <tr class="d-flex show-in-mobile">
                     <td class="text-left col-2">
-                      Total
+                      Portfolio totals
+                    </td>
+                    <!-- Total daily change perc-->
+
+                    {% if portfolio_items.daily_change_perc > 3 %}
+                    <td class="col-3 text-right text-black bg-success">
+                      <span class="text-black">
+                        {{ portfolio_items.daily_change_perc }}%
+                      </span>
+                    </td>
+                    {% else %} {# this is for portfolio_items.daily_change_perc <= 3 #}
+                    {% if portfolio_items.daily_change_perc > 0 %}
+                    <td class="col-3 text-right">
+                      <span class="text-success">
+                        {{ portfolio_items.daily_change_perc }}%
+                      </span>
+                    </td>
+                    {% else %} {# this is for daily_change_perc <= 0 #}
+                    {% if portfolio_items.daily_change_perc < -3 %}
+                    <td class="col-3 text-right bg-danger">
+                      <span class="">
+                        {{ portfolio_items.daily_change_perc }}%
+                      </span>
+                    </td>
+                    {% else %} {# this is for daily_change_perc between 0 and -3 #}
+                    {% if portfolio_items.daily_change_perc < 0 %}
+                    <td class="col-3 text-right text-danger">
+                      <span class="text-danger">
+                        {{ portfolio_items.daily_change_perc }}%
+                      </span>
+                    </td>
+                    {% else %}  {# this is for portfolio_items.daily_change_perc == 0 #}
+                    <td class="col-3 text-right">
+                      {{ portfolio_items.daily_change_perc }}%
+                    </td>
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    <!-- Total net -->
+                    <td class="col-3 text-right">
+                      {{ portfolio_items.total_net }}
+                    </td>
+                    <!-- Total profit -->
+                    {% if portfolio_items.profit > 0 %}  
+                    <td class="col-2 text-right">
+                      <span class="text-success">
+                        {{ portfolio_items.profit_perc }}%
+                      </span>
+                    </td>
+                    {% else %}  {# this is for portfolio_items.profit <= 0 #}
+                    <td class="col-2 text-right text-danger">
+                      <span class="text-danger">
+                        {{ portfolio_items.profit_perc }}%
+                      </span>
+                    </td>
+                    {% endif %}
+                  </tr>
+
+                  
+                  <!-- Row containing overal total -->
+                  <tr class="d-flex show-in-mobile">
+                    <td class="text-left col-2">
+                      Combined totals
                     </td>
                     <!-- Total daily change perc-->
                     {% if not daily_from_today %}
@@ -240,9 +309,7 @@
                     {% else %} {# this is for daily_change_perc <= 0 #}
                     {% if daily_change_perc < -3 %}
                     <td class="col-3 text-right bg-danger">
-                      <span class="">
-                        {{ daily_change_perc }}%
-                      </span>
+                      {{ daily_change_perc }}%
                     </td>
                     {% else %} {# this is for daily_change_perc between 0 and -3 #}
                     {% if daily_change_perc < 0 %}
@@ -266,23 +333,27 @@
                     </td>
                     <!-- Total profit -->
                     {% if current_total_profit > 0 %}  
-                    <td class="col-2 text-right text-success">
-                      {{current_total_profit_perc}}%
+                    <td class="col-2 text-right">
+                      <span class="text-success">
+                        {{current_total_profit_perc}}%
+                      </span>
                     </td>
                     {% else %}  {# this is for current_total_profit <= 0 #}
                     <td class="col-2 text-right text-danger">
-                      {{current_total_profit_perc}}%
+                      <span class="text-danger">
+                        {{current_total_profit_perc}}%
+                      </span>
                     </td>
                     {% endif %}
                   </tr>
                   {% endif %}  
                 {% endfor %} 
               
-                {% if queryset|length == 0  %}
+                {% if portfolio_items.queryset|length == 0  %}
                 <!-- Row containg the Add Stock button -->
                 <tr class="d-flex">
                   <td class="col-3">
-                    <a href="/transactions/create" class="btn btn-primary" role="button">
+                    <a href="/transactions/{{ portfolio }}/create" class="btn btn-primary" role="button">
                       Add Transaction
                     </a>
                   </td>
@@ -346,7 +417,7 @@
                 <!-- The body for the current portfolio -->
                 <tbody>
                 <!-- We loop through all the labels with the given stocks -->
-                {% for label, stocks in queryset.items %}
+                {% for label, stocks in portfolio_items.queryset.items %}
                   <!-- Create a row which contains only the label name for the overview -->
                   <tr>
                     <td class="col-3"> 
@@ -501,10 +572,70 @@
                     </td>
                   </tr>
 
-                  <!-- Row containing total in desktop -->
+                  <!-- Row containing portfolio totals in desktop -->
                   <tr class="d-flex">
                     <td class="text-left col-7">
-                      Total
+                      Portfolio totals
+                    </td>
+                    <!-- Total daily change perc-->
+                    {% if portfolio_items.daily_change_perc > 3 %}
+                    <td class="col-1 text-right text-black bg-success">
+                      <span class="text-black">
+                        {{portfolio_items.daily_change}} ({{portfolio_items.daily_change_perc}}%)
+                      </span>
+                    </td>
+                    {% else %} {# this is for portfolio_items.daily_change_perc <= 3 #}
+                    {% if portfolio_items.daily_change_perc > 0 %}
+                    <td class="col-1 text-right">
+                      <span class="text-success">
+                        {{portfolio_items.daily_change}} ({{portfolio_items.daily_change_perc}}%)
+                      </span>
+                    </td>
+                    {% else %} {# this is for portfolio_items.daily_change_perc <= 0 #}
+                    {% if portfolio_items.daily_change_perc < -3 %}
+                    <td class="col-1 text-right bg-danger">
+                      {{portfolio_items.daily_change}} ({{portfolio_items.daily_change_perc}}%)
+                    </td>
+                    {% else %} {# this is for portfolio_items.daily_change_perc between 0 and -3 #}
+                    {% if portfolio_items.daily_change_perc < 0 %}
+                    <td class="col-1 text-right">
+                      <span class="text-danger">
+                        {{portfolio_items.daily_change}} ({{portfolio_items.daily_change_perc}}%)
+                      </span>                       </td>
+                    {% else %}  {# this is for portfolio_items.daily_change_perc == 0 #}
+                    <td class="col-1 text-right">
+                      <span class="text-warning">
+                        {{portfolio_items.daily_change}} ({{portfolio_items.daily_change_perc}}%)
+                      </span>      
+                    </td>
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    <!-- Total net -->
+                    <td class="col-1 text-right">
+                      {{portfolio_items.total_net}}
+                    </td>
+                    <!-- Total profit -->
+                    {% if portfolio_items.profit > 0 %}  
+                    <td class="col-1 text-right">
+                      <span class='text-success'>
+                        {{portfolio_items.profit}} ({{portfolio_items.profit_perc}}%)
+                      </span>
+                    </td>
+                    {% else %}  {# this is for portfolio_items.profit <= 0 #}
+                    <td class="col-1 text-right">
+                      <span class='text-danger'>
+                        {{portfolio_items.profit}} ({{portfolio_items.profit_perc}}%)
+                      </span>
+                    </td>
+                    {% endif %}
+                  </tr>
+
+                  <!-- Row containing combine totals in desktop -->
+                  <tr class="d-flex">
+                    <td class="text-left col-7">
+                      Combined totals
                     </td>
                     <!-- Total daily change perc-->
                     {% if not daily_from_today %}
@@ -556,12 +687,15 @@
                     </td>
                     {% else %} {# this is for daily_change_perc between 0 and -3 #}
                     {% if daily_change_perc < 0 %}
-                    <td class="col-1 text-right text-danger">
-                      {{daily_change}} ({{daily_change_perc}}%)
-                    </td>
+                    <td class="col-1 text-right">
+                      <span class="text-danger">
+                        {{daily_change}} ({{daily_change_perc}}%)
+                      </span>                       </td>
                     {% else %}  {# this is for daily_change_perc == 0 #}
-                    <td class="col-1 text-right text-warning">
-                      {{daily_change}} ({{daily_change_perc}}%)
+                    <td class="col-1 text-right">
+                      <span class="text-warning">
+                        {{daily_change}} ({{daily_change_perc}}%)
+                      </span>      
                     </td>
                     {% endif %}
                     {% endif %}
@@ -574,19 +708,23 @@
                     </td>
                     <!-- Total profit -->
                     {% if current_total_profit > 0 %}  
-                    <td class="col-1 text-right text-success">
-                      {{current_total_profit}} ({{current_total_profit_perc}}%)
+                    <td class="col-1 text-right">
+                      <span class='text-success'>
+                        {{current_total_profit}} ({{current_total_profit_perc}}%)
+                      </span>
                     </td>
                     {% else %}  {# this is for current_total_profit <= 0 #}
-                    <td class="col-1 text-right text-danger">
-                      {{current_total_profit}} ({{current_total_profit_perc}}%)
+                    <td class="col-1 text-right">
+                      <span class='text-danger'>
+                        {{current_total_profit}} ({{current_total_profit_perc}}%)
+                      </span>
                     </td>
                     {% endif %}
                   </tr>
                   {% endif %}  
                 {% endfor %} 
               
-                {% if queryset|length == 0  %}
+                {% if portfolio_items.queryset|length == 0  %}
                 <!-- Row containg the Add Stock button -->
                 <tr class="d-flex">
                   <td class="col-3">
