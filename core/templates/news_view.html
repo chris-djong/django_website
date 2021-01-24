@@ -26,12 +26,12 @@
           {% if sentiment != "settings_url" %}
           <li class="nav-item">
             {% if sentiment == "Positive" %}
-            <a class="nav-link card-title text-success" data-toggle="tab" href="#{{ ticker }}_{{ sentiment }}">{{ sentiment }} ({{ articles.n_articles_new }}/{{ articles|length }})</a>
+            <a class="nav-link card-title text-success" data-toggle="tab" href="#{{ ticker }}_{{ sentiment }}">{{ sentiment }} ({{ articles.n_articles_new }}/{{ articles.articles|length }})</a>
             {% else %}
             {% if sentiment == "Negative" %}
-            <a class="nav-link card-title text-danger" data-toggle="tab" href="#{{ ticker }}_{{ sentiment }}">{{ sentiment }} ({{ articles.n_articles_new }}/{{ articles|length }})</a>
+            <a class="nav-link card-title text-danger" data-toggle="tab" href="#{{ ticker }}_{{ sentiment }}">{{ sentiment }} ({{ articles.n_articles_new }}/{{ articles.articles|length }})</a>
             {% else %}
-            <a class="nav-link card-title text-warning" data-toggle="tab" href="#{{ ticker }}_{{ sentiment }}">{{ sentiment }} ({{ articles.n_articles_new }}/{{ articles|length }})</a>
+            <a class="nav-link card-title text-warning" data-toggle="tab" href="#{{ ticker }}_{{ sentiment }}">{{ sentiment }} ({{ articles.n_articles_new }}/{{ articles.articles|length }})</a>
             {% endif %}
             {% endif %}
           </li>

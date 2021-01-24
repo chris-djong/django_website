@@ -58,7 +58,7 @@ def news_view(request, *args, **kwargs):
                         articles[ticker][sentiment]["articles"][-1].days_since = (article.date - datetime.date.today()).days
                         if not article.read:
                             n_articles_new += 1
-        if sentiment == "settings_url":
+        if sentiment != "settings_url":
             articles[ticker][sentiment]["n_articles_new"] = n_articles_new
 
                         
