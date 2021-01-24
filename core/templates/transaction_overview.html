@@ -10,12 +10,6 @@
 <!-- Initial alerts for users -->
 <div class="row">
   <div class="col-12">
-    <div class="alert alert-danger">
-      Added Portfolio management option. Just change the portfolio setting of your transaction to obtain a second overview.
-    </div>
-</div>
-<div class="row">
-  <div class="col-12">
     <div class="alert alert-warning">
       ToDos: Add mobile/medium/desktop accessibility - Check total for queryset of 0 - Check Mike alibaba price_bought - Add market to stock and remove currency as prices can differ across market. Add button to sell stocks (goes to new transaction page with everything formatted to form already). Update fake settings view and allow setting changes. Mails are send to everybody together in CC, use for loop. Test Cryptos. Keep old api - new api for indicators. Dont download stocks if entry present already. Add mobile templates. Disable viewport zooming. Use fixed width and auto margin for desktop. JS add bottom of page for speed improvements. JS for context possibility?. Check news iex api. Add balance sheet, key stats and dividends (with download dates). Remove user download ability. </div>
   </div>
@@ -27,7 +21,7 @@
     <!-- Card in which Table is located -->
     <div class="card">
       <!-- Set Header of overal card where the different portfolio buttons are located-->
-      <div class="card-header" style="display: inline">
+      <div class="card-header">
         <ul class="nav nav-pills card-header" role="tablist">
           {% for portfolio in querysets.keys %}
           {% if forloop.first %} 
@@ -217,10 +211,10 @@
                     </td>
                   </tr>
                   
-                  <!-- Row containing overal total -->
+                  <!-- Row containing combined total -->
                   <tr class="d-flex show-in-mobile">
                     <td class="text-left col-2">
-                      Combined totals
+                      Totals
                     </td>
                     <!-- Total daily change perc-->
                     {% if not daily_from_today %}
@@ -512,7 +506,7 @@
                   <!-- Row containing combine totals in desktop -->
                   <tr class="d-flex">
                     <td class="text-left col-7">
-                      Combined totals
+                      Totals
                     </td>
                     <!-- Total daily change perc-->
                     {% if not daily_from_today %}

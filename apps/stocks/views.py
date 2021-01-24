@@ -124,7 +124,10 @@ def transaction_overview_view(request, *args, **kwargs):
 def transaction_creation_view(request, portfolio, *args, **kwargs):
     if request.method == "GET":
         today = datetime.datetime.today()
-        my_form = TransactionCreationForm(initial= {"date_bought": today, "portfolio": portfolio})
+        if portfolio == 'Watching':
+            my_form = TransactionCreationForm(initial= {"date_bought": today, "amount": 0, "portfolio": portfolio})
+        else:
+            my_form = TransactionCreationForm(initial= {"date_bought": today, "portfolio": portfolio})
     elif request.method == "POST":
         my_form = TransactionCreationForm(request.POST)
         if my_form.is_valid():
