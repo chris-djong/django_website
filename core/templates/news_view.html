@@ -23,6 +23,9 @@
         </button>
         <ul class="nav nav-tabs card-header" role="tablist">
           {% for sentiment, articles in data.items %}
+          {% for key, value in articles.items %}
+          {{ key, value }}
+          {% endfor %}
           {% if sentiment != "settings_url" %}
           <li class="nav-item">
             {% if sentiment == "Positive" %}

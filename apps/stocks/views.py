@@ -58,6 +58,10 @@ def transaction_overview_view(request, *args, **kwargs):
                     diversification_chart_dict[label] += transaction_context["amount"]*transaction_context["current_price"]
                 else:
                     diversification_chart_dict[label] = transaction_context["amount"]*transaction_context["current_price"] 
+ 
+    # Add watching queryset by default in case it is not there yet
+    if "Watching" not in querysets.keys():
+        querysets["Watching"] = {}
 
     # Now convert the diversification_chart_dict to values comprehended by chart.js
     diversification_chart_labels = list(diversification_chart_dict.keys())
