@@ -24,14 +24,14 @@
       <div class="card-header">
         <h4 class="card-title">Portfolio</h4>
       </div>
-      <!--Set Body of overal card for mobile -->
-      <div class="card-body show-in-mobile">
+
+      <!--Mobile View Body -->
+      <div class="card-body hide-in-desktop">
         <!-- And create the responsive table for the Portfolio -->
         <div class="table-responsive">
           <table class="table" style="white-space: nowrap;">
             <!-- Column headers for the current portfolio -->
             <thead class="text-primary">
-              <!-- Row which is shown only in mobile -->
               <tr class="d-flex">
                 <th class="col-2">
                   Ticker 
@@ -68,7 +68,7 @@
               <!-- Row which is only shown in mobile -->
               <tr class="d-flex">
                 <td class="col-2">
-                  {{stock.name}} ({{stock.ticker}})
+                  {{stock.ticker}}
                 </td>
                 {% if stock.daily_change > 0 %}
                 {% if stock.exchange_closed %}
@@ -308,7 +308,7 @@
         </div>
       </div>
 
-      <!--Set Body of overal card for desktop -->
+      <!-- Desktop view Body -->
       <div class="card-body hide-in-mobile">
         <!-- And create the responsive table for the Portfolio -->
         <div class="table-responsive">
