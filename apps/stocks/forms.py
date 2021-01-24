@@ -21,14 +21,14 @@ class DateRangeForm(forms.Form):
 class TransactionCreationForm(forms.ModelForm):
     class Meta:
         model = Transaction
-        fields = ['stock', 'amount', 'label', 'date_bought', "price_bought", "buy_fees_linear", "buy_fees_constant", "sell_fees_linear", "sell_fees_constant"]
+        fields = ['stock', 'amount', 'portfolio','label', 'date_bought', "price_bought", "buy_fees_linear", "buy_fees_constant", "sell_fees_linear", "sell_fees_constant"]
         widgets = {'date_bought': SelectDateWidget(years=range(datetime.date.today().year, 1985, -1))}
 
 # Form used for the management of transactions in the transaction overview
 class TransactionSettingsForm(forms.ModelForm):
     class Meta:
         model = Transaction
-        fields = ['stock','amount','label','date_bought',"price_bought",'buy_fees_linear','buy_fees_constant', "date_sold", "price_sold",'sell_fees_linear','sell_fees_constant','lower_alert','upper_alert']
+        fields = ['stock','amount','portfolio','label','date_bought',"price_bought",'buy_fees_linear','buy_fees_constant', "date_sold", "price_sold",'sell_fees_linear','sell_fees_constant','lower_alert','upper_alert']
         widgets = {'date_bought': SelectDateWidget(years=range(datetime.date.today().year, 1985, -1)), 'date_sold': SelectDateWidget(years=range(datetime.date.today().year, 1985, -1))}
 
 # Form used for the selling of a stock

@@ -125,7 +125,7 @@ def transaction_overview_view(request, *args, **kwargs):
 def transaction_creation_view(request, *args, **kwargs):
     if request.method == "GET":
         today = datetime.datetime.today()
-        my_form = TransactionCreationForm(initial= {"date_bought": today})
+        my_form = TransactionCreationForm(initial= {"date_bought": today, "portfolio": "Portfolio"})
     elif request.method == "POST":
         my_form = TransactionCreationForm(request.POST)
         if my_form.is_valid():
@@ -417,7 +417,7 @@ def transaction_settings_view(request, id):
     if transaction.user == request.user:
         # First retrieve the corresponding settings from the database
         if request.method == "GET":
-            settings_form = TransactionSettingsForm(initial={"stock":transaction.stock,"amount": transaction.amount, "label":transaction.label, "price_bought":transaction.price_bought, "buy_fees": transaction.buy_fees, "sell_fees": transaction.sell_fees, "buy_fees_constant": transaction.buy_fees_constant, "sell_fees_constant": transaction.sell_fees_constant, "buy_fees_linear": transaction.buy_fees_linear, "sell_fees_linear": transaction.sell_fees_linear, "lower_alert":transaction.lower_alert, "upper_alert":transaction.upper_alert, "date_bought": transaction.date_bought, "date_sold":transaction.date_sold})
+            settings_form = TransactionSettingsForm(initial={"stock":transaction.stock,"portfolio":transaction.portfolio,"amount": transaction.amount, "label":transaction.label, "price_bought":transaction.price_bought, "buy_fees": transaction.buy_fees, "sell_fees": transaction.sell_fees, "buy_fees_constant": transaction.buy_fees_constant, "sell_fees_constant": transaction.sell_fees_constant, "buy_fees_linear": transaction.buy_fees_linear, "sell_fees_linear": transaction.sell_fees_linear, "lower_alert":transaction.lower_alert, "upper_alert":transaction.upper_alert, "date_bought": transaction.date_bought, "date_sold":transaction.date_sold})
         elif request.method == "POST":
             settings_form = TransactionSettingsForm(request.POST)
             if settings_form.is_valid():
@@ -452,6 +452,9 @@ def transaction_settings_view(request, id):
                     transaction.lower_alert = None
                 if transaction.upper_alert == "":
                     transaction.upper_alert = None
+
+                # Set the portfolio
+                transaction.portfolio = 
 
                 # Finally save them
                 transaction.save()
