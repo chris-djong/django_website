@@ -41,33 +41,26 @@ def news_view(request, *args, **kwargs):
 
     # Next we will sort all articles such that only the 5 latest are shown which have not been read yet 
     articles = {}
-    articles_read = {}
     for ticker, sentiments in all_articles.items():
         articles[ticker] = {}
-        articles_read[ticker] = {}
         for sentiment, results in sentiments.items(): 
-            n_articles = 0
+            n_articles_new = 0
             if sentiment == "settings_url":
                 articles[ticker][sentiment] = results
             else:
-                articles[ticker][sentiment] = []
-                articles_read[ticker][sentiment] = []
+                articles[ticker][sentiment] = {}
+                articles[ticker][sentiment]["articles"] = []
                 for article in results:
                     if type(article) != dict:
+                        articles[ticker][sentiment]["articles"].append(article)
+                        delete_url = os.path.join(os.path.join("/article", str(article.id)), "delete")
+                        articles[ticker][sentiment]["articles"][-1].delete_url = delete_url
+                        articles[ticker][sentiment]["articles"][-1].days_since = (article.date - datetime.date.today()).days
                         if not article.read:
-                            articles[ticker][sentiment].append(article)
-                            delete_url = os.path.join(os.path.join("/article", str(article.id)), "delete")
-                            articles[ticker][sentiment][-1].delete_url = delete_url
-                            n_articles += 1
-                        else:
-                            articles_read[ticker][sentiment].append(article)
-                            delete_url = os.path.join(os.path.join("/article", str(article.id)), "delete")
-                            articles_read[ticker][sentiment][-1].delete_url = delete_url
-                i = 0
-                while i<len(articles_read[ticker][sentiment]):
-                    articles[ticker][sentiment].append(articles_read[ticker][sentiment][i])
-                    i += 1
-                    n_articles += 1
+                            n_articles_new += 1
+            articles[ticker][sentiment]["n_articles_new"] = n_articles_new
+
+                        
     # Render articles
     my_context = {"all_data": articles}
     return render(request, "news_view.html", my_context)
