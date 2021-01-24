@@ -26,11 +26,11 @@
           {% for portfolio_id in querysets.keys %}
           {% if forloop.first %} 
           <li class="nav-item">
-            <a class="nav-link active card-title" data-toggle="pill" href="#{{ portfolio_id }}">Portfolio {{ portfolio_id }}</a>
+            <a class="nav-link active card-title" data-toggle="pill" href="#p{{ portfolio_id }}">Portfolio {{ portfolio_id }}</a>
           </li>
           {% else %} {# in case we are not in the first loop #}
           <li class="nav-item">
-            <a class="nav-link card-title" data-toggle="pill" href="#{{ portfolio_id }}">Portfolio {{ portfolio_id }}</a>
+            <a class="nav-link card-title" data-toggle="pill" href="#p{{ portfolio_id }}">Portfolio {{ portfolio_id }}</a>
           </li>
           {% endif %} {# for loop first #}
           {% endfor %}  {# loop through portfolio_ids #}
@@ -40,12 +40,12 @@
         </a>
       </div>
 
-      {% for portfolio_id, queryset in querysets.items %}
       <div class="tab-content">
+      {% for portfolio_id, queryset in querysets.items %}
         {% if forloop.first %} 
-        <div id="{{portfolio_id}}" class="container tab-pane active">
+        <div id="p{{portfolio_id}}" class="container tab-pane active">
         {% else %}
-        <div id="{{portfolio_id}}" class="container tab-pane fade">
+        <div id="p{{portfolio_id}}" class="container tab-pane fade">
         {% endif %}
           <!--Mobile View Body 2-3-3-2-2 cell configuration -->
           <div class="card-body hide-in-desktop">
@@ -619,8 +619,8 @@
             </div>
           </div>
         </div>
-      </div>
       {% endfor %}
+      </div>
     </div>
   </div>
 </div>
