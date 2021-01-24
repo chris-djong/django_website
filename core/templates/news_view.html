@@ -50,13 +50,17 @@
             <table class="table">
               <tbody>
                 {% for article in articles.articles %}
-                <tr>
+                <tr class="d-flex"> 
 			            {% if not article.read %}
-                  <td class="col-2 text-white hide-in-mobile">
-                    {{ article.date }}
+                  <td class="col-2 hide-in-mobile">
+                    <span class="text-white">
+                      {{ article.date }}
+                    </span>
                   </td>
-                  <td class="col-2 text-white hide-in-desktop">
-                    {{ article.days_since }} days
+                  <td class="col-2 hide-in-desktop">
+                    <span class="text-white">
+                      {{ article.days_since }} days
+                    </span>
                   </td>
 			            {% else %}
                   <td class="col-2 hide-in-mobile">
@@ -87,7 +91,7 @@
                     </button>
                   </td>
                 </tr>
-                <tr>
+                <tr class="d-flex">
                   <td class="col-12 hide-in-mobile">
                     {% if not article.read %}
                     <p class="text-white">
