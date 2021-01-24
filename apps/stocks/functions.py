@@ -350,6 +350,7 @@ def get_context(transaction):
         price_today = -5
         print("We have a really abnormal date here!!!!!! for ", transaction, transaction, transaction)
         exchange_closed = False
+
     # Obtain data for yesterday
     yesterday = get_prev_weekday(today)
     data_yesterday = get_stock_price_date(transaction.stock, yesterday)
@@ -426,12 +427,10 @@ def get_context(transaction):
     # In case we have a combined transaction simply take the id of the first transaction for the stock ids 
     if transaction.combined:
         context["plot_link"] = os.path.join(os.path.join("/transactions", str(transaction.id.split("-")[0])), "plot")
-        context["download_link"] = os.path.join(os.path.join("/transactions", str(transaction.id.split("-")[0])), "download")
         context["settings_link"] = os.path.join(os.path.join("/transactions", str(transaction.id)), "settings_combined")
         context["delete_link"] = os.path.join(os.path.join("/transactions", str(transaction.id)), "settings_combined")
     else:
         context["plot_link"] = os.path.join(os.path.join("/transactions", str(transaction.id)), "plot")
-        context["download_link"] = os.path.join(os.path.join("/transactions", str(transaction.id)), "download")
         context["settings_link"] = os.path.join(os.path.join("/transactions", str(transaction.id)), "settings")
         context["delete_link"] = os.path.join(os.path.join("/transactions", str(transaction.id)), "delete")
     return context
