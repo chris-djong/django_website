@@ -48,7 +48,7 @@ def transaction_overview_view(request, *args, **kwargs):
             label = labels[i]
             # We only add the first label to the queryset for generation of the overview
             if i == 0:
-                if label in queryset:
+                if label in querysets[portfolio_id]:
                     querysets[portfolio_id][label].append(transaction_context)
                 else:
                     querysets[portfolio_id][label] = [transaction_context, ]
