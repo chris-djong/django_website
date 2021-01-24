@@ -6,114 +6,99 @@
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
-
-<div class = "row">
-  <div class = "col-12">
-    <h4> 
-      <div class="text-warning">
-        Due to API limits articles are only downloaded in case you have logged in the last 7 days. New articles are downloaded each morning at 11h15 CET. 
-      </div>
-    </h4>
-  </div>
-</div>
+{# Loop through all the tickers and the corresponding articles #}
 {% for ticker, data in all_data.items %}
-  <div class="row"/>
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <p class="h3"/>
-            {{ ticker }} 
-            <button type="button" rel="tooltip" class="btn btn-success animation-on-hover btn-sm btn-icon">
-              <a href={{data.settings_url}}> 
-	        <img src="{% static 'assets/img/settings.png' %}"/>
-	      </a>                  
-	    </button>
-        </div>
-        <div class="card-body">
+<div class="row">
+  <div class="col-12">
+    <div class="card">
+      <!-- Set the header which contains the nav bar to different sentiments and the button for changing of article ticker-->
+      <div class="card-header">
+        <p class="h3">
+          {{ ticker }} 
+        </p>  
+        <button type="button" rel="tooltip" class="btn btn-success animation-on-hover btn-sm btn-icon">
+          <a href={{data.settings_url}}> 
+            <img src="{% static 'assets/img/settings.png' %}"/>
+          </a>                  
+        </button>
+        <ul class="nav nav-pills card-header" role="tablist">
           {% for sentiment, articles in data.items %}
-            {% if sentiment != "settings_url" and sentiment != "delete_url" %}
-              <div class="col-12">
-                <div class="card">
-                  <div class="card-header">
-                    <h5 class="card-category">
-                      {% if sentiment == "Positive"%}
-                        <div class="text-success">
-                      {% else %}
-                        {% if sentiment == "Negative" %}
-                          <div class="text-danger">
-                        {% else %}
-                          <div class="text-warning">
-                        {% endif %}
-                      {% endif %} 
-                      {{sentiment}} </div>
-                    </h5>
-                  </div>
-                  <div class="card-body">
-                    {% for article in articles %}
-                      <div class="row">
-			{% if not article.read %}
-                          <div class="col-2 text-white">
-                            {{ article.date }}
-                          </div>
-			{% else %}
-			  <div class="col-2 text-gray-dark">
-		            {{ article.date }}
-			  </div>
-			{% endif %}
-                        <div class="col-9 text-left">
-                          {% if not article.read %}
-		                    <a class="text-primary" target="_blank" href="/article/{{ article.id }}/read/?next={{ article.url }}">
-		                      {{ article.title }}
-		                    </a>
-                          {% else %}
-		                    <a class="text-secondary" target="_blank" href="/article/{{ article.id }}/read/?next={{ article.url }}">
-		                      {{ article.title }}
-		                    </a>
-		          {% endif %}
-                        </div>
-                        <button type="button" rel="tooltip" class="btn btn-danger animation-on-hover btn-sm btn-icon">
-                          <a href={{article.delete_url}}>
-                            <img src="{% static 'assets/img/delete.png' %}"/>
-                          </a>
-                        </button>
-                      </div>
-                      <div class="row">
-                        <div class="col-12">
-                          {% if not article.read %}
-                            <p class="text-white">
-                              {{ article.text }}
-                            </p>
-                          {% else %}
-                            <p class="text-gray-dark">
-                              {{ article.text }}
-                            </p>
-                          {% endif %}
-                        </div>
-                      </div>
-                    {% endfor %}           
-                  </div>
-                </div>
-              </div>
-            {% endif %}
-          {% endfor %}
-        </div>
+          {% if sentiment != "settings_url" %}
+          {% if forloop.first %} 
+          <li class="nav-item">
+            <a class="nav-link active card-title" data-toggle="pill" href="#{{ ticker }}_{{ sentiment }}">{{ sentiment }}</a>
+          </li>
+          {% else %} {# in case we are not in the first loop #}
+          <li class="nav-item">
+            <a class="nav-link card-title" data-toggle="pill" href="#{{ ticker }}_{{ sentiment }}">{{ sentiment }}</a>
+          </li>
+          {% endif %} {# for loop first #}
+          {% endif %} {# settings url #}
+          {% endfor %}  {# loop through portfolio_ids #}
+        </ul>
       </div>
-    </div>       
-  </div>
-{% endfor %}
 
+      <!-- Next set the articles that are shown in the body depending on the sentiment that is pressed in the navbar-->
+      <div class="tab-content">
+        {% for sentiment, articles in data.items %}
+        {% if sentiment != "settings_url" %}
+        {% if forloop.first %}
+        <div id="{{ ticker }}_{{ sentiment }}" class="container tab-pane active">
+        {% else %}
+        <div id="{{ ticker }}_{{ sentiment }}" class="container tab-pane fade">
+        {% endif %}
+          <!-- Then set the body of the corresponding tab -->
+          <div class="card-body">
+          {% for article in articles %}
+            <div class="row">
+			        {% if not article.read %}
+              <div class="col-2 text-white">
+                {{ article.date }}
+              </div>
+			        {% else %}
+			        <div class="col-2 text-gray-dark">
+		            {{ article.date }}
+			        </div>
+			        {% endif %}
+              <div class="col-9 text-left">
+                {% if not article.read %}
+                <a class="text-primary" target="_blank" href="/article/{{ article.id }}/read/?next={{ article.url }}">
+                {% else %}
+                <a class="text-secondary" target="_blank" href="/article/{{ article.id }}/read/?next={{ article.url }}">
+                {% endif %}
+                  {{ article.title }}
+                </a>
+              </div>
+              <button type="button" rel="tooltip" class="btn btn-danger animation-on-hover btn-sm btn-icon">
+                <a href={{article.delete_url}}>
+                  <img src="{% static 'assets/img/delete.png' %}"/>
+                </a>
+              </button>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                {% if not article.read %}
+                <p class="text-white">
+                {% else %}
+                <p class="text-gray-dark">
+                {% endif %}
+                  {{ article.text }}
+                </p>
+              </div>
+            </div>
+          {% endfor %}           
+          </div>
+        </div>
+        {% endif %}  {# sentiment is not settings url #}
+      {% endfor %}  {# for sentiment, articles in data.items #}
+      </div>
+    </div>
+  </div>       
+</div>
+{% endfor %}  {# for ticker in #}
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
-
-  <script>
-    $(document).ready(function() {
-      // Javascript method's body can be found in assets/js/demos.js
-      demo.initDashboardPageCharts();
-
-    });
-  </script>
-
 {% endblock javascripts %}
 
