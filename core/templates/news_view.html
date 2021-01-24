@@ -24,7 +24,7 @@
         <ul class="nav nav-tabs card-header" role="tablist">
           {% for sentiment, articles in data.items %}
           {% for key, value in articles.items %}
-          {{ key, value }}
+          {{ key}}{{ value }}
           {% endfor %}
           {% if sentiment != "settings_url" %}
           <li class="nav-item">
@@ -57,11 +57,11 @@
                 {{ article.date }}
               </div>
               <div class="col-2 text-white hide-in-desktop">
-                {{ article.days_since }}
+                {{ article.days_since }} days
               </div>
 			        {% else %}
               <div class="col-2 text-grey-dark hide-in-mobile">
-                {{ article.date }}
+                {{ article.date }} days
               </div>
               <div class="col-2 text-grey-dark hide-in-desktop">
                 {{ article.days_since }}
@@ -83,7 +83,7 @@
               </button>
             </div>
             <div class="row hide-in-mobile">
-              <div class="col-12">
+              <div class="col-12 hide-in-mobile">
                 {% if not article.read %}
                 <p class="text-white">
                 {% else %}
