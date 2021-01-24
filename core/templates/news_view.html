@@ -24,7 +24,7 @@
         <ul class="nav nav-tabs card-header" role="tablist">
           {% for sentiment, articles in data.items %}
           {% if sentiment != "settings_url" %}
-          <li class="nav-item">
+          <li class="nav-item {{sentiment}}">
             <a class="nav-link card-title" data-toggle="tab" href="#{{ ticker }}_{{ sentiment }}">{{ sentiment }} ({{ articles|length }})</a>
           </li>
           {% endif %} {# settings url #}
