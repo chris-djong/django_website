@@ -454,7 +454,7 @@ def transaction_settings_view(request, id):
                     transaction.upper_alert = None
 
                 # Set the portfolio
-                transaction.portfolio = 
+                transaction.portfolio = settings_form.data["portfolio"]
 
                 # Finally save them
                 transaction.save()
