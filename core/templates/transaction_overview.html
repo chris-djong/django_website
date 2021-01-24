@@ -43,7 +43,7 @@
                   Net Total
                 </th>
                 <th class="col-2 text-right">
-                  Total Profit
+                  Profit
                 </th>
                 <th class="col-2 text-right">
                   Actions
@@ -200,31 +200,41 @@
                 </td>
                 <!-- Total daily change perc-->
                 {% if not daily_from_today %}
-                <td class="col-3 text-right text-warning"> 
-                  {{ daily_change_perc }}%
+                <td class="col-3 text-right"> 
+                  <span class="text-warning">
+                    {{ daily_change_perc }}%
+                  </span>
                 </td>
                 {% else %}  {# else so if daily_from_today #}
                 {% if daily_change_perc > 3 %}
-                <td class="col-3 text-right text-black bg-success text-black">
-                  {{daily_change_perc}}%
+                <td class="col-3 text-right text-black bg-success">
+                  <span class="text-black">
+                    {{ daily_change_perc }}%
+                  </span>
                 </td>
                 {% else %} {# this is for daily_change_perc <= 3 #}
                 {% if daily_change_perc > 0 %}
-                <td class="col-3 text-right test-success">
-                  {{daily_change_perc}}%
+                <td class="col-3 text-right">
+                  <span class="text-success">
+                    {{ daily_change_perc }}%
+                  </span>
                 </td>
                 {% else %} {# this is for daily_change_perc <= 0 #}
                 {% if daily_change_perc < -3 %}
                 <td class="col-3 text-right bg-danger">
-                  {{daily_change_perc}}%
+                  <span class="">
+                    {{ daily_change_perc }}%
+                  </span>
                 </td>
                 {% else %} {# this is for daily_change_perc between 0 and -3 #}
                 {% if daily_change_perc < 0 %}
                 <td class="col-3 text-right text-danger">
-                  {{daily_change_perc}}%
+                  <span class="text-danger">
+                    {{ daily_change_perc }}%
+                  </span>
                 </td>
                 {% else %}  {# this is for daily_change_perc == 0 #}
-                <td class="col-3 text-right text-warning">
+                <td class="col-3 text-right">
                   {{daily_change_perc}}%
                 </td>
                 {% endif %}

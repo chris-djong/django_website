@@ -54,7 +54,7 @@
 }
 
 /* Create media function to hide columns in mobile */
-@media (min-width: 0) and (max-width: 1500px) {    
+@media (min-width: 0) and (max-width: 1499px) {    
   .hide-in-mobile{
     display: none;
   }
