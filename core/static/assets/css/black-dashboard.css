@@ -66,19 +66,6 @@
   }
 }
 
-/* Colors for the news article sentiments */
-.positive{
-    color: var(--success);
-}
-
-.negative{
-  color: var(--danger);
-}
-
-.neutral{
-  color: var(--warning);
-}
-
 *,
 *::before,
 *::after {
