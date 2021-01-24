@@ -44,7 +44,7 @@
       </div>
 
       <div class="tab-content">
-      {% for portfolio, portfolio_items in querysets.items %}
+      {% for portfolio, queryset in querysets.items %}
         {% if forloop.first %} 
         <div id="p{{portfolio}}" class="container tab-pane active">
         {% else %}
@@ -78,7 +78,7 @@
                 <!-- The body for the current portfolio -->
                 <tbody>
                 <!-- We loop through all the labels with the given stocks -->
-                {% for label, stocks in portfolio_items.queryset.items %}
+                {% for label, stocks in queryset.items %}
                   <!-- Create a row which contains only the label name for the overview -->
                   <tr>
                     <td class="col-3"> 
@@ -216,69 +216,6 @@
                       </a>
                     </td>
                   </tr>
-
-                  <!-- Row containing portfolio totals -->
-                  <tr class="d-flex show-in-mobile">
-                    <td class="text-left col-2">
-                      Portfolio totals
-                    </td>
-                    <!-- Total daily change perc-->
-
-                    {% if portfolio_items.daily_change_perc > 3 %}
-                    <td class="col-3 text-right text-black bg-success">
-                      <span class="text-black">
-                        {{ portfolio_items.daily_change_perc }}%
-                      </span>
-                    </td>
-                    {% else %} {# this is for portfolio_items.daily_change_perc <= 3 #}
-                    {% if portfolio_items.daily_change_perc > 0 %}
-                    <td class="col-3 text-right">
-                      <span class="text-success">
-                        {{ portfolio_items.daily_change_perc }}%
-                      </span>
-                    </td>
-                    {% else %} {# this is for daily_change_perc <= 0 #}
-                    {% if portfolio_items.daily_change_perc < -3 %}
-                    <td class="col-3 text-right bg-danger">
-                      <span class="">
-                        {{ portfolio_items.daily_change_perc }}%
-                      </span>
-                    </td>
-                    {% else %} {# this is for daily_change_perc between 0 and -3 #}
-                    {% if portfolio_items.daily_change_perc < 0 %}
-                    <td class="col-3 text-right text-danger">
-                      <span class="text-danger">
-                        {{ portfolio_items.daily_change_perc }}%
-                      </span>
-                    </td>
-                    {% else %}  {# this is for portfolio_items.daily_change_perc == 0 #}
-                    <td class="col-3 text-right">
-                      {{ portfolio_items.daily_change_perc }}%
-                    </td>
-                    {% endif %}
-                    {% endif %}
-                    {% endif %}
-                    {% endif %}
-                    <!-- Total net -->
-                    <td class="col-3 text-right">
-                      {{ portfolio_items.total_net }}
-                    </td>
-                    <!-- Total profit -->
-                    {% if portfolio_items.profit > 0 %}  
-                    <td class="col-2 text-right">
-                      <span class="text-success">
-                        {{ portfolio_items.profit_perc }}%
-                      </span>
-                    </td>
-                    {% else %}  {# this is for portfolio_items.profit <= 0 #}
-                    <td class="col-2 text-right text-danger">
-                      <span class="text-danger">
-                        {{ portfolio_items.profit_perc }}%
-                      </span>
-                    </td>
-                    {% endif %}
-                  </tr>
-
                   
                   <!-- Row containing overal total -->
                   <tr class="d-flex show-in-mobile">
@@ -349,7 +286,7 @@
                   {% endif %}  
                 {% endfor %} 
               
-                {% if portfolio_items.queryset|length == 0  %}
+                {% if queryset|length == 0  %}
                 <!-- Row containg the Add Stock button -->
                 <tr class="d-flex">
                   <td class="col-3">
@@ -417,7 +354,7 @@
                 <!-- The body for the current portfolio -->
                 <tbody>
                 <!-- We loop through all the labels with the given stocks -->
-                {% for label, stocks in portfolio_items.queryset.items %}
+                {% for label, stocks in queryset.items %}
                   <!-- Create a row which contains only the label name for the overview -->
                   <tr>
                     <td class="col-3"> 
@@ -570,66 +507,6 @@
                         Add Transaction
                       </a>
                     </td>
-                  </tr>
-
-                  <!-- Row containing portfolio totals in desktop -->
-                  <tr class="d-flex">
-                    <td class="text-left col-7">
-                      Portfolio totals
-                    </td>
-                    <!-- Total daily change perc-->
-                    {% if portfolio_items.daily_change_perc > 3 %}
-                    <td class="col-1 text-right text-black bg-success">
-                      <span class="text-black">
-                        {{portfolio_items.daily_change}} ({{portfolio_items.daily_change_perc}}%)
-                      </span>
-                    </td>
-                    {% else %} {# this is for portfolio_items.daily_change_perc <= 3 #}
-                    {% if portfolio_items.daily_change_perc > 0 %}
-                    <td class="col-1 text-right">
-                      <span class="text-success">
-                        {{portfolio_items.daily_change}} ({{portfolio_items.daily_change_perc}}%)
-                      </span>
-                    </td>
-                    {% else %} {# this is for portfolio_items.daily_change_perc <= 0 #}
-                    {% if portfolio_items.daily_change_perc < -3 %}
-                    <td class="col-1 text-right bg-danger">
-                      {{portfolio_items.daily_change}} ({{portfolio_items.daily_change_perc}}%)
-                    </td>
-                    {% else %} {# this is for portfolio_items.daily_change_perc between 0 and -3 #}
-                    {% if portfolio_items.daily_change_perc < 0 %}
-                    <td class="col-1 text-right">
-                      <span class="text-danger">
-                        {{portfolio_items.daily_change}} ({{portfolio_items.daily_change_perc}}%)
-                      </span>                       </td>
-                    {% else %}  {# this is for portfolio_items.daily_change_perc == 0 #}
-                    <td class="col-1 text-right">
-                      <span class="text-warning">
-                        {{portfolio_items.daily_change}} ({{portfolio_items.daily_change_perc}}%)
-                      </span>      
-                    </td>
-                    {% endif %}
-                    {% endif %}
-                    {% endif %}
-                    {% endif %}
-                    <!-- Total net -->
-                    <td class="col-1 text-right">
-                      {{portfolio_items.total_net}}
-                    </td>
-                    <!-- Total profit -->
-                    {% if portfolio_items.profit > 0 %}  
-                    <td class="col-1 text-right">
-                      <span class='text-success'>
-                        {{portfolio_items.profit}} ({{portfolio_items.profit_perc}}%)
-                      </span>
-                    </td>
-                    {% else %}  {# this is for portfolio_items.profit <= 0 #}
-                    <td class="col-1 text-right">
-                      <span class='text-danger'>
-                        {{portfolio_items.profit}} ({{portfolio_items.profit_perc}}%)
-                      </span>
-                    </td>
-                    {% endif %}
                   </tr>
 
                   <!-- Row containing combine totals in desktop -->
