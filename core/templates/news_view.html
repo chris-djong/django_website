@@ -47,9 +47,9 @@
         <div id="{{ ticker }}_{{ sentiment }}" class="container tab-pane fade">
           <!-- Then set the body of the corresponding tab -->
           <div class="card-body">
-          {% for article in articles.articles %}
             <table class="table">
               <tbody>
+                {% for article in articles.articles %}
                 <tr>
 			            {% if not article.read %}
                   <td class="col-2 text-white hide-in-mobile">
@@ -59,14 +59,18 @@
                     {{ article.days_since }} days
                   </td>
 			            {% else %}
-                  <td class="col-2 text-grey-dark hide-in-mobile">
-                    {{ article.date }}
+                  <td class="col-2 hide-in-mobile">
+                    <span class="text-grey-dark">
+                      {{ article.date }}
+                    </span>                  
                   </td>
-                  <td class="col-2 text-grey-dark hide-in-desktop">
-                    {{ article.days_since }} days
+                  <td class="col-2 hide-in-desktop">
+                    <span class="text-grey-dark">
+                      {{ article.days_since }} days
+                    </span>
                   </td>
 			            {% endif %}
-                  <td class="col-8 text-left">
+                  <td class="col-8">
                     {% if not article.read %}
                     <a class="text-primary" target="_blank" href="/article/{{ article.id }}/read/?next={{ article.url }}">
                     {% else %}
@@ -94,9 +98,9 @@
                     </p>
                   </td>
                 </tr>
+                {% endfor %} 
               </tbody>
-            </table>
-          {% endfor %}           
+            </table>         
           </div>
         </div>
         {% endif %}  {# sentiment is not settings url #}
