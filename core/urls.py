@@ -23,9 +23,4 @@ urlpatterns = [
     # Newsapi pages
     path("", include("apps.newsapi.urls")),
 
-    # Predictor pages
-    path("", include("apps.predictor.urls")),
-
-    # Iexcloud pages
-    path("", include("apps.iexcloud.urls")),
     ]

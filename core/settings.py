@@ -28,8 +28,6 @@ INSTALLED_APPS = [
     'apps.stocks',
     'apps.mail_relay',
     'apps.newsapi',
-    'apps.predictor',
-    'apps.iexcloud',
     'authentication',
     'django_celery_beat', 
 
