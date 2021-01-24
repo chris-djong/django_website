@@ -42,7 +42,6 @@ def news_view(request, *args, **kwargs):
     # Next we will sort all articles such that only the 5 latest are shown which have not been read yet 
     articles = {}
     articles_read = {}
-    max_n_articles = 3  # amount of articles that are shown in total
     for ticker, sentiments in all_articles.items():
         articles[ticker] = {}
         articles_read[ticker] = {}
@@ -56,17 +55,16 @@ def news_view(request, *args, **kwargs):
                 for article in results:
                     if type(article) != dict:
                         if not article.read:
-                            if n_articles<max_n_articles:
-                                articles[ticker][sentiment].append(article)
-                                delete_url = os.path.join(os.path.join("/article", str(article.id)), "delete")
-                                articles[ticker][sentiment][-1].delete_url = delete_url
-                                n_articles += 1
+                            articles[ticker][sentiment].append(article)
+                            delete_url = os.path.join(os.path.join("/article", str(article.id)), "delete")
+                            articles[ticker][sentiment][-1].delete_url = delete_url
+                            n_articles += 1
                         else:
                             articles_read[ticker][sentiment].append(article)
                             delete_url = os.path.join(os.path.join("/article", str(article.id)), "delete")
                             articles_read[ticker][sentiment][-1].delete_url = delete_url
                 i = 0
-                while n_articles < max_n_articles and i<len(articles_read[ticker][sentiment]):
+                while i<len(articles_read[ticker][sentiment]):
                     articles[ticker][sentiment].append(articles_read[ticker][sentiment][i])
                     i += 1
                     n_articles += 1
