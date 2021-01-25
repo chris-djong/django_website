@@ -19,6 +19,9 @@ class DateRangeForm(forms.Form):
 
 # Form used for the creation of new transaction in the transaction overview
 class TransactionCreationForm(forms.ModelForm):
+    price_bought_to_eur = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), initial="Euro")
+    buy_fees_to_eur = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), initial="Euro")
+    sell_fees_to_eur = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), initial="Euro")
     class Meta:
         model = Transaction
         fields = ['stock', 'amount', 'portfolio','label', 'date_bought', "price_bought", "buy_fees_linear", "buy_fees_constant", "sell_fees_linear", "sell_fees_constant"]
