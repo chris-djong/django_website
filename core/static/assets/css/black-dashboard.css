@@ -66,6 +66,12 @@
   }
 }
 
+/* For span which has to sit in top left corner of table cell */
+.footer-menu-item {
+  vertical-align: top;
+  text-align: left;
+}
+
 *,
 *::before,
 *::after {
