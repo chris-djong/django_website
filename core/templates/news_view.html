@@ -118,5 +118,16 @@
 
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
+$(document).ready(function(){
+  $(".nav-link").click(function(){
+    var me = $(this);
+    var panel = $('#' + this.hash.substr(1).toLowerCase());
+    if(me.hasClass('active')){
+       me.removeClass('active');
+      panel.removeClass('active');     
+          return false;
+    }
+  });
+});
 {% endblock javascripts %}
 
