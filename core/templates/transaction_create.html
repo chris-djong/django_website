@@ -19,7 +19,7 @@
                 Stock 
               </td>
               <td class="col-8">
-              {{ form.stock }} 
+              {{ form.stock |crispy}} 
               </td>
               <td class="col-1 text-left"> 
                 <a class="btn btn-primary btn-sm" href="/stocks/create/">
@@ -32,7 +32,7 @@
                 Amount 
               </td>
               <td class="col-9">
-                {{ form.amount }} 
+                {{ form.amount |crispy}} 
               </td>
             </tr>
             <tr class="d-flex">
@@ -40,7 +40,7 @@
                 Portfolio 
               </td>
               <td class="col-9">
-                {{ form.portfolio }} 
+                {{ form.portfolio |crispy}} 
               </td>
             </tr>
             <tr class="d-flex">
@@ -48,7 +48,7 @@
                 Label
               </td>
               <td class="col-9">
-                {{ form.label }} 
+                {{ form.label |crispy}} 
               </td>
             </tr>
             <tr class="d-flex">
@@ -56,7 +56,7 @@
                 Date 
               </td>
               <td class="col-9">
-                {{ form.date_bought }} 
+                {{ form.date_bought |crispy}} 
               </td>
             </tr>
             <tr class="d-flex">
@@ -110,6 +110,8 @@
     </div>
   </div>
 </div>
+
+
 <div class="row">
   <div class="col-12" id="footer-menu">
     <table>

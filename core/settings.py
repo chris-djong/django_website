@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'apps.newsapi',
     'authentication',
     'django_celery_beat', 
+    'crispy_forms',  # to obtain nice and easier to manage forms
 
     # Django defaults
     'django.contrib.admin',
@@ -126,6 +127,7 @@ DATABASES = {
     }
 }
 
+
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
@@ -179,5 +181,4 @@ STATICFILES_DIRS = (
 REDIS_HOST = "localhost"
 BROKER_URL = "redis://127.0.0.1:6379/0"
 BROKER_TRANSPORT = "redis"
-
 
