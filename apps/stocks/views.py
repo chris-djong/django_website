@@ -60,8 +60,8 @@ def transaction_overview_view(request, *args, **kwargs):
                     diversification_chart_dict[label] = transaction_context["amount"]*transaction_context["current_price"] 
  
     # Add watching queryset by default in case it is not there yet
-    if "Watching" not in querysets.keys():
-        querysets["Watching"] = {}
+    if "Watchlist" not in querysets.keys():
+        querysets["Watchlist"] = {}
 
     # Now convert the diversification_chart_dict to values comprehended by chart.js
     diversification_chart_labels = list(diversification_chart_dict.keys())
@@ -128,7 +128,7 @@ def transaction_overview_view(request, *args, **kwargs):
 def transaction_creation_view(request, portfolio, *args, **kwargs):
     if request.method == "GET":
         today = datetime.datetime.today()
-        if portfolio == 'Watching':
+        if "watch" in portfolio.lower():
             my_form = TransactionCreationForm(initial= {"date_bought": today, "amount": 0, "portfolio": portfolio})
         else:
             my_form = TransactionCreationForm(initial= {"date_bought": today, "portfolio": portfolio})
