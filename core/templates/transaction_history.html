@@ -140,13 +140,12 @@
 	</div>
   </div>
 </div>
+{% endblock content %} 
+
 {% block information %}
-  <div id="footer-menu">
     <table>
-      <tr>
-        <td class="footer-menu-item">Net total:</td><td class="footer-menu-item">The amount that is removed added or removed from you bank account. In case of a buy it is equal to amount*price_bought + buy_fees. In case of a sell: amount*price_sold - sell_fees.</td>
+      <tr class="d-flex">
+        <td class="col-2 footer-menu-item">Net total:</td><td class="col-10 footer-menu-item">The amount that is removed added or removed from you bank account. In case of a buy it is equal to amount*price_bought + buy_fees. In case of a sell: amount*price_sold - sell_fees.</td>
       </tr>
     </table>
-  </div>
 {% endblock information %} 
-{% endblock content %} 

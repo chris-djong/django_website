@@ -48,12 +48,14 @@
       {% include 'includes/navigation.html' %}
       <div class="content">
         {% block content %}{% endblock content %}
+	
+	<div class="card">
+          <div class="card-body">
+	    {% block information %}{% endblock information %}
+	  </div>
+	</div>
       </div>
-      <div class="card">
-        <div class="card-body">
-          {% include 'includes/footer.html' %}
-        </div>
-      </div>
+      {% include 'includes/footer.html' %}
     </div>
   </div>
 
