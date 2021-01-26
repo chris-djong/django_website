@@ -2,7 +2,7 @@ from .models import Stock, Transaction, StockPriceHistory, UserPortfolioHistory,
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from pandas_datareader import data
+from pandas_datareader import data as pdr
 from pandas_datareader._utils import RemoteDataError
 from requests.exceptions import ReadTimeout, ConnectTimeout, ConnectionError
 import datetime
@@ -37,7 +37,7 @@ def get_currency_history(currency, date):
         if currency_data.count() == 0:
             # Try downloading it and saving the object
             try:
-                data = data.get_data_yahoo(currency_ticker, date).iloc[0]
+                data = pdr.get_data_yahoo(currency_ticker, date).iloc[0]
                 data["Ticker"] = currency.ticker
                 to_eur = downloaded_data["Adj Close"]
                 CurrencyHistory.objects.create(currency=currency, date=date, to_eur=to_eur)
@@ -60,7 +60,7 @@ def get_currency_history(currency, date):
 # Download the stock for a given date 
 def download_stock_date(stock, date):
     try:
-        data = data.get_data_yahoo(ticker, date).iloc[0]
+        data = pdr.get_data_yahoo(ticker, date).iloc[0]
         if is_instance(ticker, str):
             data['Ticker'] = ticker
 
@@ -335,7 +335,7 @@ def get_context(transaction):
     # but we have actually obtained data from the day before. To fix this we loop through the yesterday data until we obtain a new setpoint
     while (price_yesterday == price_today) or (abs(price_yesterday/to_eur_yesterday - price_today/to_eur_today) < 0.01):
         # not sure whether this is needed exchange_closed = True
-        yesterday = get_prev_weekday(today)
+        yesterday = get_prev_weekday(yesterday)
         data_yesterday = get_stock_price_date(transaction.stock, yesterday)
         price_yesterday = data_yesterday["close"]
 
