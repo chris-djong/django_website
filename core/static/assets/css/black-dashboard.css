@@ -34,6 +34,7 @@
   --gray-dark: #858585;
   --light: #adb5bd;
   --lighter: #e9ecef;
+  --background-second: #26293c;
   --primary: #00c3ff;
   --secondary: #008ab5;
   --success: #00f2c3;
@@ -64,6 +65,10 @@
   .hide-in-desktop{
     display: none;
   }
+}
+
+.multi-select-widget {
+    background-color: -var(background-second); 
 }
 
 /* For span which has to sit in top left corner of table cell */
@@ -291,6 +296,7 @@ select,
 optgroup,
 textarea {
   margin: 0;
+  background-color: inherit;
   font-family: inherit;
   font-size: inherit;
   line-height: inherit;

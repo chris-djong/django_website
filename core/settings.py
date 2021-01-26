@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'authentication',
     'django_celery_beat', 
     'crispy_forms',  # to obtain nice and easier to manage forms
+    'widget_tweaks',
 
     # Django defaults
     'django.contrib.admin',

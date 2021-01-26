@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.forms.widgets import SelectDateWidget
 import datetime
 
+
 # Form to retrieve user
 class UserForm(forms.Form):
     user = forms.ModelChoiceField(queryset=User.objects.all())
@@ -25,7 +26,7 @@ class TransactionCreationForm(forms.ModelForm):
     class Meta:
         model = Transaction
         fields = ['stock', 'amount', 'portfolio','label', 'date_bought', "price_bought", "buy_fees_linear", "buy_fees_constant", "sell_fees_linear", "sell_fees_constant"]
-        widgets = {'date_bought': SelectDateWidget(years=range(datetime.date.today().year, 1985, -1))}
+        widgets = {"date_bought": SelectDateWidget(years=range(datetime.date.today().year, 1985, -1))}
 
 # Form used for the management of transactions in the transaction overview
 class TransactionSettingsForm(forms.ModelForm):
@@ -46,6 +47,7 @@ class StockCreationForm(forms.ModelForm):
     class Meta:
         model = Stock
         fields = ['ticker', 'article_ticker', 'plot_ticker', 'name', 'currency']
+
 
 # Form used to change Stock settings
 # Also change in models.py if something changes here
