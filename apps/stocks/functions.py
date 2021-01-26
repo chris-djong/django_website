@@ -37,7 +37,7 @@ def get_currency_history(currency, date):
         if currency_data.count() == 0:
             # Try downloading it and saving the object
             try:
-                data = data.get_data_yahoo(currency_ticker date).iloc[0]
+                data = data.get_data_yahoo(currency_ticker, date).iloc[0]
                 data["Ticker"] = currency.ticker
                 to_eur = downloaded_data["Adj Close"]
                 CurrencyHistory.objects.create(currency=currency, date=date, to_eur=to_eur)

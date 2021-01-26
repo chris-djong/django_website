@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import transaction_overview_view, transaction_creation_view, transaction_delete_view, stock_download_since_view, transaction_settings_view, transaction_settings_history_view, stock_creation_view, transaction_sell_view, coming_soon_view, transaction_watch_view, transaction_history_view, transaction_plot_view, transaction_rank_view, user_portfolio_download_view, stock_download_today_view, stock_change_article_ticker_view, transaction_download_view, transaction_settings_combined_view
+from .views import transaction_overview_view, transaction_creation_view, transaction_delete_view, stock_download_since_view, transaction_settings_view, transaction_settings_history_view, stock_creation_view, coming_soon_view, transaction_watch_view, transaction_history_view, transaction_plot_view, transaction_rank_view, user_portfolio_download_view, stock_download_today_view, stock_change_article_ticker_view, transaction_download_view, transaction_settings_combined_view
 
 urlpatterns = [
     # Home
@@ -14,7 +14,6 @@ urlpatterns = [
     path('transactions/<int:id>/settings/', transaction_settings_view, name="settings_transaction"),
     path('transactions/<int:id>/settings_history/', transaction_settings_history_view, name="settings_history_transaction"),
     path('transactions/<str:ids>/settings_combined/', transaction_settings_combined_view, name="settings_combined_transaction"),
-    path('transactions/<int:id>/sell/', transaction_sell_view, name="sell_transaction"),
     path('transactions/<int:id>/plot/', transaction_plot_view, name="plot_transaction"),
 
     # Modify stocks

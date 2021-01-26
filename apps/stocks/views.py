@@ -3,7 +3,7 @@ import os
 from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .functions import get_transactions, get_portfolio, get_historical_data, get_prev_weekday, get_context, obtain_start_date, get_currency_history
+from .functions import get_stock_price_date, get_transactions, get_portfolio, get_prev_weekday, get_context, obtain_start_date, get_currency_history
 from .tasks import download_all_stocks_since, download_stock_since, download_all_user_portfolio_history, download_user_portfolio_history_since, merge_transactions, download_all_stocks_today
 from .forms import TransactionCreationForm, TransactionSettingsForm, TransactionSellForm, StockCreationForm, StockSettingsForm, TransactionWatchForm, UserForm, DateForm, DateRangeForm
 from .models import Transaction, StockPriceHistory, UserPortfolioHistory, Stock
@@ -145,26 +145,9 @@ def transaction_creation_view(request, portfolio, *args, **kwargs):
 
             # In case the user did not put in a price_bought date
             if transaction.price_bought is None:
-                found = False
-                download_date = transaction.date_bought
-                if download_date.weekday() >= 5:
-                    download_date = get_prev_weekday(download_date)
+                data = get_stock_price_date(transaction.stock, transaction.date_bought)
+                transaction.price_bought = round(data["close"], 2)
 
-                # Safety measure for infinite loop
-                i = 0
-                while not found:
-                    i += 1
-                    if i == 5:
-                        data_bought = {"Close": -12345}
-                        found = True
-                        continue
-
-                    data_bought, found = get_historical_data(transaction.stock.ticker, download_date)
-                    download_date = get_prev_weekday(download_date)
-
-                # Then obtain the current Currency/EUR price
-                to_eur = get_currency_history(transaction.stock.currency, download_date)
-                transaction.price_bought = round(data_bought["Close"]*to_eur, 2)
             else:  # in case we have entered a price bought calculate the price in eur 
                 to_eur = get_currency_history(transaction.price_bought_currency, transaction.date_bought)
                 transaction.price_bought = transaction.price_bought*to_eur
@@ -226,58 +209,6 @@ def transaction_settings_combined_view(request, ids):
         queryset[""].append(transaction_context)
     context = {"queryset": queryset}
     return render(request, "transaction_settings_combined.html", context)
-
-
-# Confirmation view for deletion of stocks
-@login_required(login_url="login")
-def transaction_sell_view(request, id, *args, **kwargs):
-    transaction = get_object_or_404(Transaction, id=id)
-    # Verify whether user is allowed to modify the given transaction
-    if transaction.user == request.user:
-        if request.method == "GET":
-            transaction_sell_form = TransactionSellForm()
-        elif request.method == "POST":
-            # Put all the data that the user entered into a form in order to overwrite it onto the actual transaction later on 
-            transaction_sell_form = TransactionSellForm(request.POST)
-            if transaction_sell_form.is_valid():
-                # Obtain the actual transaction to overwrite the data too 
-                transaction = get_object_or_404(Transaction, id=id)
-                # If we did not enter a valid Date just use today
-                if transaction_sell_form.data["date_sold_year"] == "":
-                    date = datetime.date.today()
-                else:
-                    date = datetime.date(int(transaction_sell_form.data['date_sold_year']), int(transaction_sell_form.data['date_sold_month']), int(transaction_sell_form.data['date_sold_day']))
-                # Make sure it is a weekday
-                if date.weekday() >= 5:
-                    date = get_prev_weekday(date)
-                transaction.date_sold = date
-
-                # If we did not add a price sold use the Adj Close price of the date sold
-                if transaction_sell_form.data["price_sold"] is None:
-                    # ToDo: Make function out of this, same for all examples in functions.py
-                    found = False
-                    date = transaction.date_sold
-                    # Safety mesaure for infinite loop
-                    i = 0
-                    while not found:
-                        i += 1
-                        if i == 100:
-                            data_sold = {"Adj Close": -123082}
-                            found = True
-                        data_sold, found = get_historical_data(transaction.stock.ticker, date)
-                        date = get_prev_weekday(date)
-
-                    transaction.price_sold = data_sold["Adj Close"]
-                else:
-                    transaction.price_sold = transaction_sell_form.data["price_sold"]
-                transaction.save()
-                return redirect("portfolio")
-            else:
-                raise Http404("Transaction sell form not valid.")
-        context = {"form": transaction_sell_form, "stock": transaction.stock}
-        return render(request, "transaction_sell.html", context)
-    else:
-        raise Http404("No transaction matches the given query.")
 
 @login_required(login_url="login")
 def user_portfolio_download_view(request):
