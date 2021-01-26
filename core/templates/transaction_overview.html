@@ -169,6 +169,11 @@
                           <img src="{% static 'assets/img/settings.png' %}"/>
                         </a>                  
                       </button>
+                      <button type="button" rel="tooltip" class="btn btn-warning animation-on-hover btn-sm btn-icon">
+                        <a href="/transactions/sell_{{ stock.id }}/create" class="btn btn-primary" role="button">
+                          <img src="{% static 'assets/img/sell.png' %}"/>
+                        </a>
+                      </button>
                       <button type="button" rel="tooltip" class="btn btn-danger animation-on-hover btn-sm btn-icon">
                         <a href={{stock.delete_link}}>
                           <img src="{% static 'assets/img/delete.png' %}"/>
@@ -210,7 +215,7 @@
                   <!-- Row containg the Add Transaction button -->
                   <tr class="d-flex">
                     <td class="col-12" >
-                      <a href="/transactions/{{ portfolio }}/create/" class="btn btn-primary" role="button">
+                      <a href="/transactions/new_{{ portfolio }}/create" class="btn btn-primary" role="button">
                         Add Transaction
                       </a>
                     </td>
@@ -289,7 +294,7 @@
                 <!-- Row containg the Add Stock button -->
                 <tr class="d-flex">
                   <td class="col-3">
-                    <a href="/transactions/{{ portfolio }}/create" class="btn btn-primary" role="button">
+                    <a href="/transactions/new_{{ portfolio }}/create" class="btn btn-primary" role="button">
                       Add Transaction
                     </a>
                   </td>
@@ -555,7 +560,7 @@
                   <!-- Row containg the Add Transaction button -->
                   <tr class="d-flex">
                     <td class="col-12" >
-                      <a href="/transactions/{{portfolio}}/create" class="btn btn-primary" role="button">
+                      <a href="/transactions/new_{{ portfolio }}/create" class="btn btn-primary" role="button">
                         Add Transaction
                       </a>
                     </td>
@@ -657,7 +662,7 @@
                 <!-- Row containg the Add Stock button -->
                 <tr class="d-flex">
                   <td class="col-3">
-                    <a href="/transactions/{{portfolio}}/create" class="btn btn-primary" role="button">
+                    <a href="/transactions/new_{{ portfolio }}/create" class="btn btn-primary" role="button">
                       Add Transaction
                     </a>
                   </td>

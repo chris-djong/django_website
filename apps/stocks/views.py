@@ -124,14 +124,24 @@ def transaction_overview_view(request, *args, **kwargs):
     return render(request, "transaction_overview.html", my_context)
 
 # View for creation of new stocks
+# transaction type can be either of formate "sell_transactionid" or "create_portfolio"
 @login_required(login_url="login")
-def transaction_creation_view(request, portfolio, *args, **kwargs):
+def transaction_creation_view(request, transaction_type,  *args, **kwargs):
     if request.method == "GET":
         today = datetime.datetime.today()
-        if "watch" in portfolio.lower():
-            my_form = TransactionCreationForm(initial= {"date_bought": today, "amount": 0, "portfolio": portfolio})
+        # Split the transaction type so that we know what we have to do
+        transaction_type = transaction_type.split("_")
+        if transaction_type[0]=='create':
+            portfolio = transaction_type[1]
+            if "watch" in transaction.portfolio.lower():
+                my_form = TransactionCreationForm(initial={"date_bought": today, "amount": 0, "portfolio": portfolio})
+            else:
+                my_form = TransactionCreationForm(initial={"date_bought": today, "portfolio": portfolio})
+        elif transaction_type[0] == "sell":
+            transaction = Transaction.object.get(id=int(transaction_type[1]))
+            my_form = TransactionCreationForm(initial={"date_bought": today, 'amount'=-transaction.amount, 'stock'=transaction.stock})
         else:
-            my_form = TransactionCreationForm(initial= {"date_bought": today, "portfolio": portfolio})
+            raise Http404("TransactionCreationForm not valid. Please request a valid type.")
     elif request.method == "POST":
         my_form = TransactionCreationForm(request.POST)
         if my_form.is_valid():

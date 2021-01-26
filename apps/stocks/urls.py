@@ -9,7 +9,7 @@ urlpatterns = [
     path('rank/', transaction_rank_view, name="rank"),
 
     # Modify transactions
-    path('transactions/<str:portfolio>/create/', transaction_creation_view, name="create_transaction"),
+    path('transactions/<str:transaction_type>/create/', transaction_creation_view, name="create_transaction"),
     path('transactions/<int:id>/delete/', transaction_delete_view, name="delete_transaction"),
     path('transactions/<int:id>/settings/', transaction_settings_view, name="settings_transaction"),
     path('transactions/<int:id>/settings_history/', transaction_settings_history_view, name="settings_history_transaction"),
