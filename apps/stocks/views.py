@@ -135,6 +135,7 @@ def transaction_creation_view(request, portfolio, *args, **kwargs):
     elif request.method == "POST":
         my_form = TransactionCreationForm(request.POST)
         if my_form.is_valid():
+            ## ToDo: Here we can query the database first for an entry before downloading it
             # First save the data but do not commit it yet 
             transaction = my_form.save(commit=False)
             transaction.user = request.user
@@ -164,11 +165,19 @@ def transaction_creation_view(request, portfolio, *args, **kwargs):
                 # Then obtain the current Currency/EUR price
                 to_eur = get_currency_history(transaction.stock.currency, download_date)
                 transaction.price_bought = round(data_bought["Close"]*to_eur, 2)
+            else:  # in case we have entered a price bought calculate the price in eur 
+                to_eur = get_currency_history(transaction.price_bought_currency, transaction.date_bought)
+                transaction.price_bought = transaction.price_bought*to_eur
 
-            # Calculate the buy fees based on constant and linear term
+            # Convert the constant term of the buy fees to EUR and calculated the corresponding fees
+            to_eur_buy = get_currency_history(transaction.buy_fees_currency, transaction.date_bought)
+            transaction.buy_fees_constant = transaction.buy_fees_constant*to_eur_buy
             transaction.buy_fees = transaction.buy_fees_constant + transaction.buy_fees_linear*transaction.price_bought*transaction.amount
 
-            # Same for sell fees, however the actual value is here calculated in download_stock function
+            # Same for sell fees, however the actual value is here calculated in process_all_download_data task
+            today = datetime.datetime.today()
+            to_eur_sell = get_currency_history(transaction.sell_fees_currency, today)
+            transaction.sell_fess_constant = transaction.sell_fees_constant*to_eur_sell
             transaction.sell_fees = 0 # actual sell_fees calculation performed later on in download_stock function
 
             # Save data and download stock data for the last 5 days
