@@ -162,7 +162,7 @@ def transaction_creation_view(request, portfolio, *args, **kwargs):
                     download_date = get_prev_weekday(download_date)
 
                 # Then obtain the current Currency/EUR price
-                to_eur = get_currency_history(transaction.stock, download_date)
+                to_eur = get_currency_history(transaction.stock.currency, download_date)
                 transaction.price_bought = round(data_bought["Close"]*to_eur, 2)
 
             # Calculate the buy fees based on constant and linear term

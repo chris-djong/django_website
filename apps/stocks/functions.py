@@ -39,30 +39,30 @@ def get_yahoo_finance(tickers, date):
 
 
 # Function which downloads the currency history object for a given date in case it does not exist yet and retrieves it from the database otherwise
-def get_currency_history(stock, date):
+def get_currency_history(currency, date):
     # In case the currency is euro just leave it as is
-    if stock.currency.name == "Euro":
+    if currency.name == "Euro":
         return 1
     else:
         # First try to retrieve the price from the database
-        currency_data = CurrencyHistory.objects.filter(currency=stock.currency, date=date)
+        currency_data = CurrencyHistory.objects.filter(currency=currency, date=date)
 
         # In case we dont have any entries try to download the price
         if currency_data.count() == 0:
-            downloaded_data, data_from_date = get_historical_data(stock.currency.ticker, date=date)
+            downloaded_data, data_from_date = get_historical_data(currency.ticker, date=date)
             # If the price has not been downloaded with success then retrieve an older one from the database
             if not data_from_date:
                 day_iterator = date
                 day_iterator = get_prev_weekday(day_iterator)
-                currency_data = CurrencyHistory.objects.filter(currency=stock.currency, date=day_iterator)
+                currency_data = CurrencyHistory.objects.filter(currency=currency, date=day_iterator)
                 while currency_data.count() == 0:
                     day_iterator = get_prev_weekday(day_iterator)
-                    currency_data = CurrencyHistory.objects.filter(currency=stock.currency, date=day_iterator)
+                    currency_data = CurrencyHistory.objects.filter(currency=currency, date=day_iterator)
                 return currency_data[0].to_eur
             # Otherwise save the retrieved older price and return it 
             else:
                 to_eur = downloaded_data["Adj Close"]
-                CurrencyHistory.objects.create(currency=stock.currency, date=date, to_eur=to_eur)
+                CurrencyHistory.objects.create(currency=currency, date=date, to_eur=to_eur)
                 return to_eur
         # If we have downloaded the price already for today
         else:  
@@ -227,7 +227,7 @@ def download_stock_date(stock, date):
         stocks.delete()
 
         # Then obtain the current Currency/EUR price
-        to_eur = get_currency_history(stock, date)
+        to_eur = get_currency_history(stock.currency, date)
 
         # High low open close
         h = round(data["High"]*to_eur, 2)
@@ -361,8 +361,8 @@ def get_context(transaction):
         print("We have a really abnormal data here yesterday !!!!! for", transaction. transaction, transaction, )
     
     # Obtain currency of stock so that we can automatically check whether the exchange is closed
-    to_eur_today = get_currency_history(transaction.stock, today)
-    to_eur_yesterday = get_currency_history(transaction.stock, yesterday)
+    to_eur_today = get_currency_history(transaction.stock.currency, today)
+    to_eur_yesterday = get_currency_history(transaction.stock.currency, yesterday)
 
     # This condition is required in the morning, when we obtain data from the yahoo finance server and download it succesfully for the current day
     # but we have actually obtained data from the day before
@@ -380,11 +380,11 @@ def get_context(transaction):
         exchange_closed = True
         yesterday = get_prev_weekday(yesterday)
         stock_yesterday = StockPriceHistory.objects.filter(ticker=transaction.stock, date=yesterday)
-        to_eur_yesterday = get_currency_history(transaction.stock, yesterday)
+        to_eur_yesterday = get_currency_history(transaction.stock.currency, yesterday)
         # This condition is required in case we do not have any data for that day (if monday was a holiday for example and we retrieve the data on thuesday)
         while stock_yesterday.count() == 0:
             yesterday = get_prev_weekday(yesterday)
-            to_eur_yesterday = get_currency_history(transaction.stock, yesterday)
+            to_eur_yesterday = get_currency_history(transaction.stock.currency, yesterday)
             stock_yesterday = StockPriceHistory.objects.filter(ticker=transaction.stock, date=yesterday)
         price_yesterday = stock_yesterday.values()[0]["c"]
            # ToDO: Improve this and check why the currency conversion for the exchange closed does not work
