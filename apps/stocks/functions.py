@@ -60,9 +60,9 @@ def get_currency_history(currency, date):
 # Download the stock for a given date 
 def download_stock_date(stock, date):
     try:
-        data = pdr.get_data_yahoo(ticker, date).iloc[0]
-        if is_instance(ticker, str):
-            data['Ticker'] = ticker
+        data = pdr.get_data_yahoo(stock.ticker, date).iloc[0]
+        if isinstance(stock.ticker, str):
+            data['Ticker'] = stock.ticker
 
         # First delete all the current values in case there are any, so that we get rid of duplicates
         stocks = StockPriceHistory.objects.filter(date=date, ticker=stock)
@@ -92,14 +92,14 @@ def download_stock_date(stock, date):
     # Error handling for different errors 
     except (RemoteDataError):
         print(sys.exc_info()[0])
-        print("Please verify whether the ticker %s is correct." % ticker)
+        print("Please verify whether the ticker %s is correct." % stock.ticker)
         print("RemoteDataError indicates that the yahoo finance api returned that the ticker is not available for free use")
     except (ReadTimeout, ConnectTimeout, ConnectionError):
         print(sys.exc_info()[0])
-        print("Request to yahoo finance has timed out for %s." % ticker)
+        print("Request to yahoo finance has timed out for %s." % stock.ticker)
     except (KeyError, ValueError):
         print("Unexpected error:", sys.exc_info()[0])
-        print("For %s" % ticker)
+        print("For %s" % stock.ticker)
         print("This is probably because no data was retrieved due to an exchange closed or similar error.")
         print("We try to get data for date", date)
 
@@ -334,6 +334,7 @@ def get_context(transaction):
     # This condition is required in the morning, when we obtain data from the yahoo finance server and download it succesfully for the current day
     # but we have actually obtained data from the day before. To fix this we loop through the yesterday data until we obtain a new setpoint
     while (price_yesterday == price_today) or (abs(price_yesterday/to_eur_yesterday - price_today/to_eur_today) < 0.01):
+        exchange_closed = True
         # not sure whether this is needed exchange_closed = True
         yesterday = get_prev_weekday(yesterday)
         data_yesterday = get_stock_price_date(transaction.stock, yesterday)
