@@ -410,6 +410,9 @@ def download_user_portfolio_history(date, user):
             total_net += stock_data['current_total_net']
             total_portfolio += stock_data['current_total_stocks']
 
+    # Now we add the cash that we saved throughout the last transactions to our total profit for today
+    total_profit = total_profit + total_cash
+
     # Calculate portfolio value and store it in database
     user_portfolio_history = UserPortfolioHistory.objects.create(user=user, date=date, cash=total_cash, net=total_net, price=total_portfolio, profit=total_profit, invested=total_invested)
     user_portfolio_history.save()
