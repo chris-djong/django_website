@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .functions import get_stock_price_date, get_transactions, get_portfolio, get_prev_weekday, get_context, obtain_start_date, get_currency_history
 from .tasks import download_all_stocks_since, download_stock_since, download_all_user_portfolio_history, download_user_portfolio_history_since, merge_transactions, download_all_stocks_today
-from .forms import TransactionCreationForm, TransactionSettingsForm, TransactionSellForm, StockCreationForm, StockSettingsForm, TransactionWatchForm, UserForm, DateForm, DateRangeForm
+from .forms import TransactionCreationForm, TransactionSettingsForm, StockCreationForm, StockSettingsForm, TransactionWatchForm, UserForm, DateForm, DateRangeForm
 from .models import Transaction, StockPriceHistory, UserPortfolioHistory, Stock, CurrencyTicker
 from django.contrib.auth.models import User
 from django.db.models.functions import Coalesce
@@ -138,8 +138,10 @@ def transaction_creation_view(request, transaction_type,  *args, **kwargs):
             else:
                 my_form = TransactionCreationForm(initial={"date_bought": today, "portfolio": portfolio})
         elif transaction_type[0] == "sell":
-            transaction = Transaction.objects.get(id=int(transaction_type[1]))
-            my_form = TransactionCreationForm(initial={"date_bought": today, 'amount': -transaction.amount, 'stock':transaction.stock})
+            transaction_ids = [int(id) for id in transaction_type[1].split("-")]
+            transaction_amount = Transaction.objects.filter(id__in=transaction_ids)).aggregate(Sum('amount'))
+            transaction_stock = Transaction.objects.get(id=transaction_ids[0]).stock
+            my_form = TransactionCreationForm(initial={"date_bought": today, 'amount': -transaction_amount, 'stock':transaction_stock})
         else:
             raise Http404("TransactionCreationForm not valid. Please request a valid type.")
     elif request.method == "POST":
@@ -366,20 +368,13 @@ def transaction_settings_history_view(request, id):
 @login_required(login_url="login")
 def transaction_settings_view(request, id):
     transaction = get_object_or_404(Transaction, id=id)
-
-    # obtain price today
-    today = datetime.date.today()
-    stock_today = StockPriceHistory.objects.filter(ticker=transaction.stock, date=today)
-    while stock_today.count() == 0:
-        today = get_prev_weekday(today)
-        stock_today = StockPriceHistory.objects.filter(ticker=transaction.stock, date=today)
-    price_today = stock_today.values()[0]["c"]
-
-
+    
+    # The user can only access its specific stocks
     if transaction.user == request.user:
         # First retrieve the corresponding settings from the database
         if request.method == "GET":
-            settings_form = TransactionSettingsForm(initial={"stock":transaction.stock,"portfolio":transaction.portfolio,"amount": transaction.amount, "label":transaction.label, "price_bought":transaction.price_bought, "buy_fees": transaction.buy_fees, "sell_fees": transaction.sell_fees, "buy_fees_constant": transaction.buy_fees_constant, "sell_fees_constant": transaction.sell_fees_constant, "buy_fees_linear": transaction.buy_fees_linear, "sell_fees_linear": transaction.sell_fees_linear, "lower_alert":transaction.lower_alert, "upper_alert":transaction.upper_alert, "date_bought": transaction.date_bought, "date_sold":transaction.date_sold})
+            currency = transaction.currency
+            settings_form = TransactionSettingsForm(initial={"stock":transaction.stock,"portfolio":transaction.portfolio,"amount": transaction.amount, "label":transaction.label, "price_bought":transaction.price_bought, "price_bought_currency": currency, "buy_fees": transaction.buy_fees, "sell_fees": transaction.sell_fees, "buy_fees_constant": transaction.buy_fees_constant, "sell_fees_constant": transaction.sell_fees_constant, "buy_fees_linear": transaction.buy_fees_linear, "sell_fees_linear": transaction.sell_fees_linear, "buy_fees_currency": currency, "sell_fees_currency": currency, "lower_alert":transaction.lower_alert, "lower_alert_currency": currency, "upper_alert":transaction.upper_alert, "upper_alert_currency": currency, "date_bought": transaction.date_bought, "date_sold":transaction.date_sold})
         elif request.method == "POST":
             settings_form = TransactionSettingsForm(request.POST)
             if settings_form.is_valid():
@@ -392,28 +387,49 @@ def transaction_settings_view(request, id):
                 if date.weekday() >= 5:
                     date = get_prev_weekday(date)
 
-                transaction.date_bought = date
-                transaction.label = settings_form.data["label"]
-                transaction.price_bought = float(settings_form.data["price_bought"])
 
-                # Calculate buy fees
+                # Extract the price bought and convert to EUR
+                transaction.date_bought = date
+                currency = CurrencyTicker.objects.get(id=my_form.data["price_bought_currency"])
+                to_eur = get_currency_history(currency, transaction.date_bought)
+                transaction.label = settings_form.data["label"]
+                transaction.price_bought = round(float(settings_form.data["price_bought"])*to_eur, 2)
+
+                # Calculate buy fees based on the currency that has been entered
+                currency = CurrencyTicker.objects.get(id=my_form.data["buy_fees_currency"])
+                to_eur = get_currency_history(currency, transaction.date_bought)
                 transaction.buy_fees_linear = settings_form.data["buy_fees_linear"]
-                transaction.buy_fees_constant = settings_form.data["buy_fees_constant"]
-                transaction.buy_fees = float(transaction.price_bought)*float(transaction.amount)*float(transaction.buy_fees_linear) + float(transaction.buy_fees_constant)
+                transaction.buy_fees_constant = round(settings_form.data["buy_fees_constant"]*to_eur, 2)
+                transaction.buy_fees = round(float(transaction.price_bought)*float(transaction.amount)*float(transaction.buy_fees_linear) + float(transaction.buy_fees_constant), 2)
 
                 # And the sell fees
+                currency = CurrencyTicker.objects.get(id=my_form.data["sell_fees_currency"])
+                today = datetime.date.today()
+                to_eur = get_currency_history(currency, today)
                 transaction_context = get_context(transaction)
                 transaction.sell_fees_linear = settings_form.data["sell_fees_linear"]
-                transaction.sell_fees_constant = settings_form.data["sell_fees_constant"]
-                transaction.sell_fees = float(transaction.sell_fees_constant) + float(transaction.sell_fees_linear)*transaction_context["amount"]*transaction_context["current_price"]
+                transaction.sell_fees_constant = settings_form.data["sell_fees_constant"]*to_eur
+                transaction.sell_fees = round(float(transaction.sell_fees_constant) + float(transaction.sell_fees_linear)*transaction_context["amount"]*transaction_context["current_price"], 2)
 
                 # Set alerts
                 transaction.lower_alert = settings_form.data['lower_alert']
                 transaction.upper_alert = settings_form.data['upper_alert']
+                # In case they are empty set them to None and otherwise convert them to EUR
                 if transaction.lower_alert == "":
                     transaction.lower_alert = None
+                else: 
+                    currency = CurrencyTicker.objects.get(id=my_form.data["lower_alert_currency"])
+                    today = datetime.date.today()
+                    to_eur = get_currency_history(currency, today)
+                    transaction.lower_alert = transaction.lower_alert*to_eur
+                # Same for the upper alerts 
                 if transaction.upper_alert == "":
                     transaction.upper_alert = None
+                else: 
+                    currency = CurrencyTicker.objects.get(id=my_form.data["upper_alert_currency"])
+                    today = datetime.date.today()
+                    to_eur = get_currency_history(currency, today)
+                    transaction.upper_alert = round(transaction.upper_alert*to_eur, 2)
 
                 # Set the portfolio
                 transaction.portfolio = settings_form.data["portfolio"]
@@ -434,25 +450,10 @@ def transaction_settings_view(request, id):
             else:
                 # Throw an error?
                 raise Http404("Transaction settings form not valid.")
-        context = {"form": settings_form, "price_today": price_today}
+        context = {"form": settings_form}
         return render(request, "transaction_settings.html", context)
     else:
         raise Http404("No Stock matches the given query.")
-
-# View to download stocks of a given transaction
-# This view is currently required for the buttons in the transaction overview
-@login_required(login_url="login")
-def transaction_download_view(request, id, *args, **kwargs):
-    transaction = get_object_or_404(Transaction, id=id)
-
-    # obtain price today
-    day = datetime.date.today()
-
-    # Download the data
-    download_stock_since(day=day.day, month=day.month, year=day.year, stock=transaction.stock)
-
-    # And finally return to portfolio
-    return redirect("portfolio")
 
 @login_required(login_url="login")
 def stock_creation_view(request, *args, **kwargs):
@@ -465,7 +466,7 @@ def stock_creation_view(request, *args, **kwargs):
 
             # Save data and download stock data
             stock.save()
-            return redirect("/transactions/create")
+            return redirect("/transactions/new_Portfolio/create")
         else:
             # Throw an error?
             raise Http404("Stock creation form not valid.")

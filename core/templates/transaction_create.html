@@ -18,7 +18,7 @@
           <table class="table">
             <tr class="d-flex">  
               <td class="col-10">
-		{{ form.stock | add_class:"text-black" | as_crispy_field}} </div> 
+		            {{ form.stock | add_class:"text-black" | as_crispy_field}} </div> 
               </td>
               <td class="col-2 text-left"> 
                 <a class="btn btn-primary btn-sm" style="text-align: left;" href="/stocks/create/">
@@ -53,28 +53,27 @@
               <td class="col-6">
                 {{ form.price_bought_currency  | add_class:"text-black" | as_crispy_field }} 
               </td>
-
             </tr>
             <tr class="d-flex">
               <td class="col-4">
                 {{ form.buy_fees_constant | as_crispy_field }}  
               </td>
-	      <td class="col-4">
+	            <td class="col-4">
                 {{ form.buy_fees_linear | as_crispy_field }}
-	      </td>
+	            </td>
               <td class="col-4">
-                USE EUR NOT WORKING {{ form.buy_fees_currency  | add_class:"text-black" | as_crispy_field }}
+                {{ form.buy_fees_currency  | add_class:"text-black" | as_crispy_field }}
               </td>  
             </tr>
             <tr class="d-flex">
               <td class="col-4">
                 {{ form.sell_fees_constant | as_crispy_field }}   
               </td>
-	      <td class="col-4">
-	        {{ form.sell_fees_linear | as_crispy_field }}
-	      </td>
+	            <td class="col-4">
+	              {{ form.sell_fees_linear | as_crispy_field }}
+	            </td>
               <td class="col-4">
-                USE EUR NOT WORKING {{ form.sell_fees_currency  | add_class:"text-black" | as_crispy_field }}
+                {{ form.sell_fees_currency  | add_class:"text-black" | as_crispy_field }}
               </td>  
             </tr>    
             <tr class="d-flex">
@@ -83,12 +82,12 @@
               </td>
             </tr>
             <tr class="d-flex">
-              <td class="col-3 text-left">
+              <td class="col-6 text-left">
                 <a class="btn btn-danger btn-sm" href="/portfolio">
                   Cancel
                 </a>
               </td>
-              <td class="col-3 text-left">
+              <td class="col-6 text-left">
                 <input type="submit" value="Submit"/>
               </td>
             </tr>

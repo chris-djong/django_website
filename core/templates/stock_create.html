@@ -1,91 +1,80 @@
 {% extends "layouts/base.html" %}
 {% load static %}
 {% block title %} Create Transaction {% endblock %} 
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
 
-<div class="row">
-  <div class="col-12">
-    <div class="card text-white">
-      <div class="card-body"> 
-        <form action="." method="POST">
-          {% csrf_token %}
-          <div class="row">
-            <div class="col-2">
-              Name
-            </div>
-            <div class="col-10">
-              {{ form.name }} 
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-2">
-              Ticker
-            </div>
-            <div class="col-10">
-              {{ form.ticker }} 
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-2">
-              Article ticker
-            </div>
-            <div class="col-10">
-              {{ form.article_ticker }} 
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-2">
-              Plot ticker
-            </div>
-            <div class="col-10">
-              {{ form.plot_ticker }} 
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-2">
-              Currency
-            </div>
-            <div class="col-10">
-              {{ form.currency }}
-            </div>
-          </div>
-          <div class="row">
-            <div class="col-2">
-              <a class="btn btn-danger btn-sm" href="/transactions/create">
+
+
+<tr class="d-flex">
+  <div class="card text-white">
+    <div class="card-body"> 
+      <form action="." method="POST">
+        {% csrf_token %}
+        <table class="table">
+          <tr class="d-flex">  
+            <td class="col-12">
+              {{ form.name | as_crispy_field }}
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td class="col-12">
+              {{ form.ticker | as_crispy_field }} 
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td class="col-12">
+              {{ form.article_ticker | as_crispy_field }} 
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td class="col-12">
+              {{ form.plot_ticker | as_crispy_field }} 
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td class="col-12">
+              {{ form.currency | as_crispy_field }}
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td class="col-6">
+              <a class="btn btn-danger btn-sm" href="/transactions/new_/create">
                 Cancel
               </a>
-            </div>
-            <div class="col-2">
+            </td>
+            <td class="col-6">
               <input type="submit" value="Submit"/>
-            </div>
-          </div>
-        </form>
-      </div>
+            </td>
+          </tr>
+        </table>
+      </form>
     </div>
   </div>
-</div>
+</tr>
+{% endblock content %}
 
-  <div id="footer-menu">
+{% block information %}
     <table>
-      <tr>
-        <td class="footer-menu-item">Name:</td><td class="footer-menu-item">This name is used for all relating API queries throughout the website. Example: Royal Dutch Shell PLC.</td>
+      <tr class="d-flex">
+        <td class="footer-menu-item col-2">Name:</td><td class="footer-menu-item col-10">This name is used throughout the website. Example: Royal Dutch Shell PLC.</td>
       </tr>
-      <tr>
-        <td class="footer-menu-item">Ticker:</td><td class="footer-menu-item">The Ticker from <a href="https://finance.yahoo.com" target="_blank">finance.yahoo.com</a>. Generally given behind the name in (). Example: RDSA.AS</td>
+      <tr class="d-flex">
+        <td class="footer-menu-item col-2">Ticker:</td><td class="footer-menu-item col-10">The Ticker from <a href="https://finance.yahoo.com" target="_blank">finance.yahoo.com</a>. Generally given behind the name in (). Example: RDSA.AS</td>
       </tr>
-      <tr>
-        <td class="footer-menu-item">Article ticker:</td><td class="footer-menu-item">The Ticker that is used to generate news from <a class="white" href="https://stocknewsapi.com" target="_blank">stocknewsapi.com</a>. Just use the test environment on their website to see what works. Example: RSA-A. </td>
+      <tr class="d-flex">
+        <td class="footer-menu-item col-2">Article ticker:</td><td class="footer-menu-item col-10">The Ticker that is used to generate news from <a class="white" href="https://stocknewsapi.com" target="_blank">stocknewsapi.com</a>. Just use the test environment on their website to see what works. Example: RSA-A. </td>
       </tr>
-      <tr>
-        <td class="footer-menu-item">Plot ticker:</td><td class="footer-menu-item">The Ticker that is used to plots from <a class="white" href="https://www.tradingview.com" target="_blank">tradingview.com</a>. Just search for a ticker on their website. Example: RSA.A.</td>
+      <tr class="d-flex">
+        <td class="footer-menu-item col-2">Plot ticker:</td><td class="footer-menu-item col-10">The Ticker that is used to plots from <a class="white" href="https://www.tradingview.com" target="_blank">tradingview.com</a>. Just search for a ticker on their website. Example: RSA.A.</td>
       </tr>
-      <tr>
-        <td class="footer-menu-item">Currency:</td><td class="footer-menu-item">The currency that it is given at finance.yahoo.com. Example: EUR </td>
+      <tr class="d-flex">
+        <td class="footer-menu-item col-2">Currency:</td><td class="footer-menu-item col-10">The currency that it is given at finance.yahoo.com. Example: EUR </td>
       </tr>
     </table>
-</div>
-{% endblock content %}
+{% endblock information %}

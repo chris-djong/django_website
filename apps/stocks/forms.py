@@ -20,9 +20,9 @@ class DateRangeForm(forms.Form):
 
 # Form used for the creation of new transaction in the transaction overview
 class TransactionCreationForm(forms.ModelForm):
-    price_bought_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), initial="Euro")
-    buy_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), initial="Euro")
-    sell_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), initial="Euro")
+    price_bought_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
+    buy_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
+    sell_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
     class Meta:
         model = Transaction
         fields = ['stock', 'amount', 'portfolio','label', 'date_bought', "price_bought", "buy_fees_linear", "buy_fees_constant", "sell_fees_linear", "sell_fees_constant"]
@@ -30,17 +30,15 @@ class TransactionCreationForm(forms.ModelForm):
 
 # Form used for the management of transactions in the transaction overview
 class TransactionSettingsForm(forms.ModelForm):
+    price_bought_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
+    buy_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
+    sell_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
+    lower_alert_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
+    upper_alert_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
     class Meta:
         model = Transaction
         fields = ['stock','amount','portfolio','label','date_bought',"price_bought",'buy_fees_linear','buy_fees_constant', "date_sold", "price_sold",'sell_fees_linear','sell_fees_constant','lower_alert','upper_alert']
         widgets = {'date_bought': SelectDateWidget(years=range(datetime.date.today().year, 1985, -1)), 'date_sold': SelectDateWidget(years=range(datetime.date.today().year, 1985, -1))}
-
-# Form used for the selling of a stock
-class TransactionSellForm(forms.ModelForm):
-    class Meta:
-        model = Transaction
-        fields = ["date_sold", "price_sold"]
-        widgets = {"date_sold": SelectDateWidget(years=range(datetime.date.today().year, 1985, -1))}
 
 # Form used for the creation of new stocks in the transaction overview
 class StockCreationForm(forms.ModelForm):
@@ -49,8 +47,7 @@ class StockCreationForm(forms.ModelForm):
         fields = ['ticker', 'article_ticker', 'plot_ticker', 'name', 'currency']
 
 
-# Form used to change Stock settings
-# Also change in models.py if something changes here
+# Form used to change Stock settings / to change articles tickers etc for example /
 class StockSettingsForm(forms.Form):
     ticker = forms.CharField(max_length=50, required=False)
     article_ticker = forms.CharField(max_length=50, required=False)
