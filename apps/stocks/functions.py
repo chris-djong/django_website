@@ -44,13 +44,8 @@ def get_currency_history(currency, date):
             # In case that does not work simply use the last value
             except:
                 time_now = datetime.datetime.today()
-                print("Ticker given by", currency)
-                print("Error downloading the currency data for now:", time_now)
-                print(sys.exc_info()[0])
-                print("Returning first previous data found")
                 currency_data = CurrencyHistory.objects.latest("date")
                 date = currency_data.date
-                print("Succesfully found data for date VERIFY THAT THIS DATE IS INDEED CLOSE TO TODAY:", date)
                 return currency_data.to_eur
         # If we have downloaded the price already for today just return it 
         else:  
@@ -404,7 +399,6 @@ def download_user_portfolio_history(date, user):
     total_net = 0
     total_invested = 0
 
-    print("Downloading user", user, 'and date', date)
     for transaction in transactions:
         stock_data = get_context(transaction, date)
         # In case we have sold the stock today add the profit to the cash variable and remove the invested and net amounts
