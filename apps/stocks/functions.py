@@ -393,21 +393,23 @@ def download_user_portfolio_history(date, user):
     user_portfolio_history.delete()
 
     # Then obtain the latest value to see whether we have free cash flow leftover
-    user_portfolio_history_latest = UserPortfolioHistory.objects.filter(user=user).order_by('-date')[0]
-    print("Downloading user portfolio history for date", date, "and user", user)
-    print("Latest portfolio retrieved from", user_portfolio_history_latest.date)
+    user_portfolio_history_latest = UserPortfolioHistory.objects.filter(user=user, date__lt=date).order_by('-date')
+    if user_portfolio_history_latest:
+        total_cash = user_portfolio_history_latest[0].cash
+    else:
+        total_cash = 0
 
     total_profit = 0
     total_portfolio = 0
     total_net = 0
-    total_cash = user_portfolio_history_latest.cash
     total_invested = 0
 
+    print("Downloading user", user, 'and date', date)
     for transaction in transactions:
-        stock_data = get_context(transaction.stock, date)
+        stock_data = get_context(transaction, date)
         # In case we have sold the stock today add the profit to the cash variable and remove the invested and net amounts
         if transaction.date_sold == date:
-            total_cash += stock_data['amount']*(transaction.price_sold - stock_date['initial_price']) - stock_data['sell_fees'] - stock_data['buy_fees']
+            total_cash += stock_data['amount']*(transaction.price_sold - stock_data['initial_price']) - stock_data['sell_fees'] - stock_data['buy_fees']
         else:
             total_profit += stock_data['total_profit']
             total_invested += stock_data["initial_price"]*stock_data["amount"] + stock_data["sell_fees"] + stock_data["buy_fees"]

@@ -14,7 +14,7 @@
 <div class="row">
   <div class="col-12">
     <div class="alert alert-warning"> 
-      <p class='text-black'>Work in progress. Website might be unavailable. </p>	  
+      <p class='text-black'>Download of new backend in progress. Data might wrong.. </p>	  
       <p class='text-black'>Daily_from_today calculation, Settings history, settings combined, stock change news ticker, trans_del, trans_hist </p>
     </div>
   </div>
@@ -184,27 +184,6 @@
                   {% endfor %}  {# ending loop through stocks #}
                   
                   {% if forloop.last %}
-                  <!-- The last iteration contains the free cash flow, the add transaction buttons and the totals -->
-                  {% if current_total_cash != 0 %}
-                  <!-- Row with Label Cash -->
-                  <tr class="d-flex">
-                    <td class="col-12 text-left">
-                      <p class="text-primary">
-                        Cash
-                      </p>
-                    </td>
-                  </tr>
-                  <!-- Row containing the Free Cash Flow Stock -->
-                  <tr class="d-flex">
-                    <td class="col-6 text-left">
-                      Free Cash Flow
-                    </td>
-                    <td class="col-1 text-right">
-                      {{current_total_cash}}
-                    </td>
-                  </tr>
-                  {% endif %}   {# ending current total cash != 0 #}
-                  
                   <!-- Then an empty row for visibility purposes -->
                   <tr>
                     <td>
@@ -546,28 +525,7 @@
                   {% endfor %}  {# ending loop through stocks #}
                   
                   {% if forloop.last %}
-                  <!-- The last iteration contains the free cash flow, the add transaction buttons and the totals -->
-                  {% if current_total_cash != 0 %}
-                  <!-- Row with Label Cash -->
-                  <tr class="d-flex">
-                    <td class="col-12 text-left">
-                      <p class="text-primary">
-                        Cash
-                      </p>
-                    </td>
-                  </tr>
-                  <!-- Row containing the Free Cash Flow Stock in desktop -->
-                  <tr class="d-flex">
-                    <td class="col-7 text-left">
-                      Free Cash Flow
-                    </td>
-                    <td class="col-1 text-right">
-                      {{current_total_cash}}
-                    </td>
-                  </tr>
-                  {% endif %}   {# ending current total cash != 0 #}
-                  
-                  <!-- Then an empty row for visibility purposes -->
+                  <!-- The last iteration contains the add transaction buttons and the totals -->
                   <tr>
                     <td>
                       </br> <!--</br> is needed here as otherwise the cell has a lower height -->
