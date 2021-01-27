@@ -14,8 +14,10 @@
 <div class="row">
   <div class="col-12">
     <div class="alert alert-warning">
+      <p class='text-black'>Error in transaction selling. Please verify your history. FixMe: Mike transaction, sell button of combined transactions, redirect of stock creation.</p>
       <p class='text-black'>Backend has been changed, let me know in case your totals/stock prices are wrong.</p>
       <p class='text-black'>Top market cryptocurrencies have been added.</p> 
+      <p class='text-black'>Sell button has been added.</p> 
     </div>
   </div>
 </div>
@@ -518,6 +520,11 @@
                         <a href={{stock.settings_link}}> 
                           <img src="{% static 'assets/img/settings.png' %}"/>
                         </a>                  
+                      </button>
+                      <button type="button" rel="tooltip" class="btn btn-warning animation-on-hover btn-sm btn-icon">
+                        <a href="/transactions/sell_{{ stock.id }}/create" class="btn btn-primary" role="button">
+                          <img src="{% static 'assets/img/sell.png' %}"/>
+                        </a>
                       </button>
                       <button type="button" rel="tooltip" class="btn btn-danger animation-on-hover btn-sm btn-icon">
                         <a href={{stock.delete_link}}>

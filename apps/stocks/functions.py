@@ -37,9 +37,8 @@ def get_currency_history(currency, date):
         if currency_data.count() == 0:
             # Try downloading it and saving the object
             try:
-                data = pdr.get_data_yahoo(currency_ticker, date).iloc[0]
-                data["Ticker"] = currency.ticker
-                to_eur = downloaded_data["Adj Close"]
+                data = pdr.get_data_yahoo(currency.ticker, date).iloc[0]
+                to_eur = data["Adj Close"]
                 CurrencyHistory.objects.create(currency=currency, date=date, to_eur=to_eur)
                 return to_eur
             # In case that does not work simply use the last value
@@ -50,9 +49,9 @@ def get_currency_history(currency, date):
                 print(sys.exc_info()[0])
                 print("Returning first previous data found")
                 currency_data = CurrencyHistory.objects.latest("date")
-                date = currency_data[0].date
+                date = currency_data.date
                 print("Succesfully found data for date VERIFY THAT THIS DATE IS INDEED CLOSE TO TODAY:", date)
-                return currency_data[0].to_eur
+                return currency_data.to_eur
         # If we have downloaded the price already for today just return it 
         else:  
             return currency_data[0].to_eur

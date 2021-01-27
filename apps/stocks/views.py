@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from .functions import get_stock_price_date, get_transactions, get_portfolio, get_prev_weekday, get_context, obtain_start_date, get_currency_history
 from .tasks import download_all_stocks_since, download_stock_since, download_all_user_portfolio_history, download_user_portfolio_history_since, merge_transactions, download_all_stocks_today
 from .forms import TransactionCreationForm, TransactionSettingsForm, TransactionSellForm, StockCreationForm, StockSettingsForm, TransactionWatchForm, UserForm, DateForm, DateRangeForm
-from .models import Transaction, StockPriceHistory, UserPortfolioHistory, Stock
+from .models import Transaction, StockPriceHistory, UserPortfolioHistory, Stock, CurrencyTicker
 from django.contrib.auth.models import User
 from django.db.models.functions import Coalesce
 import time
@@ -131,15 +131,15 @@ def transaction_creation_view(request, transaction_type,  *args, **kwargs):
         today = datetime.datetime.today()
         # Split the transaction type so that we know what we have to do
         transaction_type = transaction_type.split("_")
-        if transaction_type[0]=='create':
+        if transaction_type[0]=='new':
             portfolio = transaction_type[1]
-            if "watch" in transaction.portfolio.lower():
+            if "watch" in portfolio.lower():
                 my_form = TransactionCreationForm(initial={"date_bought": today, "amount": 0, "portfolio": portfolio})
             else:
                 my_form = TransactionCreationForm(initial={"date_bought": today, "portfolio": portfolio})
         elif transaction_type[0] == "sell":
-            transaction = Transaction.object.get(id=int(transaction_type[1]))
-            my_form = TransactionCreationForm(initial={"date_bought": today, 'amount'=-transaction.amount, 'stock'=transaction.stock})
+            transaction = Transaction.objects.get(id=int(transaction_type[1]))
+            my_form = TransactionCreationForm(initial={"date_bought": today, 'amount': -transaction.amount, 'stock':transaction.stock})
         else:
             raise Http404("TransactionCreationForm not valid. Please request a valid type.")
     elif request.method == "POST":
@@ -159,17 +159,20 @@ def transaction_creation_view(request, transaction_type,  *args, **kwargs):
                 transaction.price_bought = round(data["close"], 2)
 
             else:  # in case we have entered a price bought calculate the price in eur 
-                to_eur = get_currency_history(transaction.price_bought_currency, transaction.date_bought)
+                currency = CurrencyTicker.objects.get(id=my_form.data["price_bought_currency"]) 
+                to_eur = get_currency_history(currency, transaction.date_bought)
                 transaction.price_bought = transaction.price_bought*to_eur
 
             # Convert the constant term of the buy fees to EUR and calculated the corresponding fees
-            to_eur_buy = get_currency_history(transaction.buy_fees_currency, transaction.date_bought)
+            currency = CurrencyTicker.objects.get(id=my_form.data["buy_fees_currency"])
+            to_eur_buy = get_currency_history(currency, transaction.date_bought)
             transaction.buy_fees_constant = transaction.buy_fees_constant*to_eur_buy
             transaction.buy_fees = transaction.buy_fees_constant + transaction.buy_fees_linear*transaction.price_bought*transaction.amount
 
             # Same for sell fees, however the actual value is here calculated in process_all_download_data task
             today = datetime.datetime.today()
-            to_eur_sell = get_currency_history(transaction.sell_fees_currency, today)
+            currency = CurrencyTicker.objects.get(id=my_form.data["sell_fees_currency"]) 
+            to_eur_sell = get_currency_history(currency, today)
             transaction.sell_fess_constant = transaction.sell_fees_constant*to_eur_sell
             transaction.sell_fees = 0 # actual sell_fees calculation performed later on in download_stock function
 
