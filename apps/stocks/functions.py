@@ -344,6 +344,43 @@ def get_context(transaction, date=datetime.date.today()):
         context["delete_link"] = os.path.join(os.path.join("/transactions", str(transaction.id)), "delete")
     return context
 
+# Functions that find a common start date for all users
+# Inputs are given by the users that we look a start date for and the amount of days the start_date around which we wish to find a common start date
+# The acceptable range is used to specify how far apart the start date can be from the other start dates
+# The function return the user that have an entry in those acceptable range dates and the closest date
+def obtain_start_date(users, date):
+    acceptable_range = 5
+    # Create an array to store the dates
+    acceptable_dates = {}
+    # First loop through all the users and verify whether they have any data in the acceptable range
+    for user in users:
+        found_date = False
+        current_date = date
+        i = 0
+        while i<acceptable_range and not found_date:
+            user_portfolio_history = UserPortfolioHistory.objects.filter(user=user, date=current_date)
+            # In case we have data available save it to the acceptable_dates and set the found_date boolean to true
+            if user_portfolio_history.count() != 0:
+                acceptable_dates[user] = current_date
+                found_date = True
+            # Otherwise simply move to the next day
+            else:
+                current_date = get_next_weekday(current_date)
+            i += 1
+        if not found_date:
+            acceptable_dates[user] = None
+    # Then we need to check what the correct users are and what the latest date is that each user has data for 
+    # Problem here is that it assumes that in case the user has data for a previous date it has it as well for the next date / this can be overcome by adding each date to the acceptable dates and verifying that the maximum amount of users are taken
+    allowed_users = []
+    allowed_date = date
+    for user, acceptable_date in acceptable_dates.items():
+        if acceptable_date is not None:
+            allowed_users.append(user)
+            if acceptable_date > allowed_date:
+                allowed_date = acceptable_date 
+
+    # For now just return the input date until the function is done
+    return allowed_date, allowed_users
 
 # This function creates a UserPortfolio entry in the database for the given date for the given user
 def download_user_portfolio_history(date, user):
