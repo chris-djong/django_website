@@ -4,7 +4,7 @@ from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .functions import get_stock_price_date, get_transactions, get_portfolio, get_prev_weekday, get_context, obtain_start_date, get_currency_history
-from .tasks import download_all_stocks_since, download_stock_since, download_all_user_portfolio_history, download_user_portfolio_history_since, merge_transactions, download_all_stocks_today
+from .tasks import download_all_stocks_since, download_stock_since, download_every_user_portfolio_history, download_user_portfolio_history_since, merge_transactions, download_all_stocks_today
 from .forms import TransactionCreationForm, TransactionSettingsForm, StockCreationForm, StockSettingsForm, TransactionWatchForm, UserForm, DateForm, DateRangeForm
 from .models import Transaction, StockPriceHistory, UserPortfolioHistory, Stock, CurrencyTicker
 from django.contrib.auth.models import User
@@ -240,16 +240,8 @@ def transaction_settings_combined_view(request, ids):
 @login_required(login_url="login")
 def user_portfolio_download_view(request):
     if request.user.username == "chris":
-        # Show form in case we came her using a GET request
-        if request.method == "GET":
-            user_form = UserForm()
-            context = {"form": user_form}
-            return render(request, "request_user.html", context)
-        elif request.method == "POST":
-            user_form = UserForm(request.POST)
-            username = User.objects.filter(id=user_form.data["user"])[0].username
-            download_all_user_portfolio_history.delay(username)
-            return redirect("portfolio")
+        download_every_user_portfolio_history.delay()
+        return redirect("portfolio")
     else:
         raise Http404("Page not found")
 

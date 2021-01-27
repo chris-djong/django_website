@@ -243,6 +243,12 @@ def download_all_user_portfolio_history(username):
 
     download_user_portfolio_history_since(username, initial_date)
 
+# Function that downloads the above user portfolio history for each username
+@app.task
+def download_every_user_portfolio_history():
+    users = User.objects.all()
+    for user in users:
+        download_all_user_portfolio_history(user.username)
 
 # Function that verifies the current stock prices, updates the sell fees and verifies whether an alert has to be send
 def process_download_data(username):
