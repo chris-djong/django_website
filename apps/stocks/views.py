@@ -194,8 +194,9 @@ def transaction_creation_view(request, transaction_type,  *args, **kwargs):
 
             download_date = get_prev_weekday(datetime.date.today(), days=5)
             download_stock_since(day=download_date.day, month=download_date.month, year=download_date.year, stock=transaction.stock)
+            process_download_data(request.user.username)  # to update the sell fees
             download_articles_since.delay(transaction.id, download_date)
-
+            
             download_date = get_prev_weekday(transaction.date_bought, days=4)
             download_user_portfolio_history_since.delay(username=request.user.username, date=download_date)
             return redirect("portfolio")
@@ -282,6 +283,7 @@ def stock_download_since_view(request):
 def stock_download_today_view(request):
     if request.user.username == "chris":
         download_all_stocks_today.delay()
+        process_all_download_data()
         # And redirect to the portfolio
         return  redirect("/portfolio")
 
@@ -453,6 +455,7 @@ def transaction_settings_view(request, id):
                 # ToDo: we can get problems here in case the market was closed for 3 days maybe? or has that been taken care of somewhere?
                 download_date = get_prev_weekday(download_date, days=3)
                 download_stock_since(day=download_date.day, month=download_date.month, year=download_date.year, stock=transaction.stock)
+                process_download_data(request.user.username)  # to update the sell fees
 
                 # And download user portfolio history since the date bought that has been entered
                 download_user_portfolio_history_since.delay(username=request.user.username, date=date)
@@ -604,21 +607,15 @@ def transaction_watch_view(request, *arg, **kwargs):
                 if transaction.date_sold is not None:
                     transaction.price_sold = round(transaction.price_sold, 2)
                     # And add profit and total bank statement
-                    queryset_history[transaction.id]["profit"] = round((
-                                                                           transaction.price_sold - transaction.price_bought) * transaction.amount - transaction.buy_fees - transaction.sell_fees,
-                                                               2)
+                    queryset_history[transaction.id]["profit"] = round((transaction.price_sold - transaction.price_bought) * transaction.amount - transaction.buy_fees - transaction.sell_fees,2)
                     queryset_history[transaction.id]["total"] = round(
                         transaction.price_sold * transaction.amount - transaction.sell_fees, 2)
                 else:
                     # And add profit and total bank statement
-                    queryset_history[transaction.id]["profit"] = round((
-                                                                           price_today - transaction.price_bought) * transaction.amount - transaction.buy_fees - transaction.sell_fees,
-                                                               2)
-                    queryset_history[transaction.id]["total"] = round(price_today * transaction.amount - transaction.sell_fees,
-                                                              1)
+                    queryset_history[transaction.id]["profit"] = round((price_today - transaction.price_bought) * transaction.amount - transaction.buy_fees - transaction.sell_fees, 2)
+                    queryset_history[transaction.id]["total"] = round(price_today * transaction.amount - transaction.sell_fees, 1)
                 # Last create links for plotting, settings and delete
-                queryset_history[transaction.id]["plot_link"] = os.path.join(os.path.join("/transactions", str(transaction.id)),
-                                                                     "plot")
+                queryset_history[transaction.id]["plot_link"] = os.path.join(os.path.join("/transactions", str(transaction.id)),"plot")
             # And finally render the page
             context = {"form": watch_form, "queryset_portfolio": queryset_portfolio, "current_total_profit_perc": current_total_profit_perc, "daily_change_perc": daily_change_perc, "daily_from_today": daily_from_today, "queryset_history": queryset_history}
             return render(request, "transaction_watch.html", context)

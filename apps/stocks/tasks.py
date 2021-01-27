@@ -279,6 +279,7 @@ def process_download_data(username):
 
 
 # Function that loops through all the users to process the download data such as user information models, sell fees and alerts
+# This function is required because otherwise we have to loop through duplicate transactions
 def process_all_download_data():
     users = User.objects.all()
     for user in users:
