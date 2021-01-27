@@ -233,44 +233,6 @@ def download_stocks_date(stocks, date):
     for stock in stocks:
         download_stock_date(stock, date)
 
-# Functions that find a common start date for all users
-# Inputs are given by the users that we look a start date for and the amount of days the start_date around which we wish to find a common start date
-# The acceptable range is used to specify how far apart the start date can be from the other start dates
-# The function return the user that have an entry in those acceptable range dates and the closest date
-def obtain_start_date(users, date):
-    acceptable_range = 5
-    # Create an array to store the dates
-    acceptable_dates = {}
-    # First loop through all the users and verify whether they have any data in the acceptable range
-    for user in users:
-        found_date = False
-        current_date = date
-        i = 0
-        while i<acceptable_range and not found_date:
-            user_portfolio_history = UserPortfolioHistory.objects.filter(user=user, date=current_date)
-            # In case we have data available save it to the acceptable_dates and set the found_date boolean to true
-            if user_portfolio_history.count() != 0:
-                acceptable_dates[user] = current_date
-                found_date = True
-            # Otherwise simply move to the next day
-            else:
-                current_date = get_next_weekday(current_date)
-            i += 1
-        if not found_date:
-            acceptable_dates[user] = None
-    # Then we need to check what the correct users are and what the latest date is that each user has data for 
-    # Problem here is that it assumes that in case the user has data for a previous date it has it as well for the next date / this can be overcome by adding each date to the acceptable dates and verifying that the maximum amount of users are taken
-    allowed_users = []
-    allowed_date = date
-    for user, acceptable_date in acceptable_dates.items():
-        if acceptable_date is not None:
-            allowed_users.append(user)
-            if acceptable_date > allowed_date:
-                allowed_date = acceptable_date 
-
-    # For now just return the input date until the function is done
-    return allowed_date, allowed_users
-
 # Function that retrieves the price of a given stock at a given date from the database
 # It returns both the price and whether the price has been retrieved from the given date or the day before
 def get_stock_price_date(stock, date):
@@ -308,9 +270,8 @@ def get_stock_price_date(stock, date):
 
 # Function that obtains the relevant context from the database
 # or calculates it if required
-def get_context(transaction):
-    # Initialise variables
-    today = datetime.date.today()
+def get_context(transaction, date=datetime.date.today()):
+    today = date
     context = {}
 
     # Convert transaction.amount from string to float
@@ -322,7 +283,7 @@ def get_context(transaction):
     exchange_closed = data_today["exchange_closed"]
 
     # Obtain data for yesterday and extract the relevant variables
-    yesterday = get_prev_weekday(today)
+    yesterday = get_prev_weekday(date)
     data_yesterday = get_stock_price_date(transaction.stock, yesterday)
     price_yesterday = data_yesterday["close"]
 
@@ -388,87 +349,33 @@ def get_context(transaction):
 def download_user_portfolio_history(date, user):
     # Obtain all transactions of that user where the buy date is less than or equal to (__lte filter) the desired date
     # Also transaction where the sell date was before should not be considered anymore
-    transactions = Transaction.objects.filter(user=user, date_bought__lte=date).filter(~Q(label="Watching")).filter(Q(date_sold__gte=date)|Q(date_sold=None))
-    # First we have to make sure that the cash of the previous day is set to 0 if possible 
-    found = False
-    day_iterator = date
-    i = 0
-    # Find the previous day for the recursive calculation
-    while not found and i<5:
-        day_iterator = get_prev_weekday(day_iterator)
-        user_portfolio_history = UserPortfolioHistory.objects.filter(user=user, date=day_iterator)
-        if user_portfolio_history.count() != 0:
-            found = True 
-        i += 1
-    # If not entry is found simply set the free cash flow to 0
-    if not found:
-        print("Error in stocks/functions/download_user_portfolio_history. Infinite loop for date", date)
-        total_invested = 0
-        total_profit = 0
-        total_cash = 0
-        total_net = 0
-        total_portfolio = 0
-    # Otherwise use the found variables
-    else:
-        if user_portfolio_history[0].cash > 0:
-            total_invested = user_portfolio_history[0].invested - user_portfolio_history[0].cash 
-        else:
-            total_invested = user_portfolio_history[0].invested - user_portfolio_history[0].cash
-        total_profit = user_portfolio_history[0].profit
-        total_portfolio = user_portfolio_history[0].price
-        total_net = user_portfolio_history[0].net
-        total_cash = 0  # as we have moved all the cash to the invested amount 
+    transactions = Transaction.objects.filter(user=user, date_bought__lte=date).filter(Q(date_sold__gte=date)|Q(date_sold=None))
     
-    # Then loop through all the transaction and add the amounts depending on what happened
-    for transaction in transactions:
-        stock_data = get_stock_price_date(transaction.stock, date)
-        # In case we have an error just skip for now (ToDo)
-        if stock_data["close"] == "infinite_loop":
-            print("Infinite loop error in user portfolio calculation for transaction %s and date %s and user %s" % (transaction, date, transaction.user))
-            continue
-        else:
-            # Try to obtain the price of yesterday
-            yesterday = get_prev_weekday(date)
-            stock_data_old = get_stock_price_date(transaction.stock, yesterday)
-            daily_change = stock_data["close"] - stock_data_old["close"]
-
-        # The condition for date bought today and date sold today
-        if transaction.date_bought == date and transaction.date_sold == date:
-            total_invested += 0
-            total_profit += transaction.amount*(transaction.price_sold - transaction.price_bought) - transaction.sell_fees- transaction.buy_fees
-            total_cash += transaction.amount*(transaction.price_sold - transaction.price_bought) - transaction.sell_fees- transaction.buy_fees
-            total_portfolio += 0
-            total_net += 0
-        # In case we have bought the transaction today 
-        elif transaction.date_bought == date:
-            total_invested += transaction.amount*transaction.price_bought  # the invested amount increases by the price bought
-            total_profit += transaction.amount*stock_data["close"] - transaction.amount*transaction.price_bought - transaction.sell_fees - transaction.buy_fees # the profit changes by the difference of the current price and the price bought
-            total_cash += 0  # there is no change in free cash flow 
-            total_portfolio += transaction.amount*stock_data["close"]  # total portfolio changes by the current value
-            total_net += transaction.amount*stock_data["close"] - transaction.sell_fees  # total net changes by current values - sell fees
-        # In case the transaction has been sold today AND not bought today than remove the invested amount and add the profit to the free cash flow 
-        elif transaction.date_sold == date:
-            total_invested -= transaction.amount*transaction.price_bought # the invested amount decreases by the price bought 
-            total_profit += transaction.amount*(transaction.price_sold - stock_data_old["close"])  # the profit changes by the difference from yesterday with respect from the sell price. Note the sell fees do not have to be incorporated here as they have been removed from the profit when the stock was bought already 
-            total_cash += transaction.amount*(transaction.price_sold - transaction.price_bought) - transaction.sell_fees - transaction.buy_fees   # the total cash flow increases by the total profit 
-            total_portfolio += transaction.amount*(transaction.price_sold - stock_data_old["close"]) # we have to add the difference between yesterday and today first otherwise there is a mismatch
-            total_portfolio -= transaction.amount*transaction.price_sold  # total portfolio value is reduced by the total amount
-            total_net += transaction.amount*(transaction.price_sold - stock_data_old["close"]) # here we have to add this difference as well
-            total_net -= transaction.amount*transaction.price_sold - transaction.sell_fees  # total net decreases by current values - sell fees have to be readded to the total net 
-        # Otherwise add the 24 hour change to the profit, the total net and the total portfolio
-        elif transaction.date_sold is None or transaction.date_sold > date:
-            total_invested += 0
-            total_profit += daily_change*transaction.amount
-            total_cash += 0
-            total_portfolio += daily_change*transaction.amount
-            total_net += transaction.amount*daily_change
-        else:
-            print("Unknown case in User portfolio calculation")
-
-
-    # Delete existing entries for this date
+    # First delete the value of today so that the it is not included in the following calculations
     user_portfolio_history = UserPortfolioHistory.objects.filter(user=user, date=date)
     user_portfolio_history.delete()
+
+    # Then obtain the latest value to see whether we have free cash flow leftover
+    user_portfolio_history_latest = UserPortfolioHistory.objects.filter(user=user).order_by('-date')[0]
+    print("Downloading user portfolio history for date", date, "and user", user)
+    print("Latest portfolio retrieved from", user_portfolio_history_latest.date)
+
+    total_profit = 0
+    total_portfolio = 0
+    total_net = 0
+    total_cash = user_portfolio_history_latest.cash
+    total_invested = 0
+
+    for transaction in transactions:
+        stock_data = get_context(transaction.stock, date)
+        # In case we have sold the stock today add the profit to the cash variable and remove the invested and net amounts
+        if transaction.date_sold == date:
+            total_cash += stock_data['amount']*(transaction.price_sold - stock_date['initial_price']) - stock_data['sell_fees'] - stock_data['buy_fees']
+        else:
+            total_profit += stock_data['total_profit']
+            total_invested += stock_data["initial_price"]*stock_data["amount"] + stock_data["sell_fees"] + stock_data["buy_fees"]
+            total_net += stock_data['current_total_net']
+            total_portfolio += stock_data['current_total_stocks']
 
     # Calculate portfolio value and store it in database
     user_portfolio_history = UserPortfolioHistory.objects.create(user=user, date=date, cash=total_cash, net=total_net, price=total_portfolio, profit=total_profit, invested=total_invested)

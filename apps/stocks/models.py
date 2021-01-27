@@ -19,7 +19,7 @@ class CurrencyHistory(models.Model):
     to_eur = models.FloatField()
 
     def __str__(self):
-        return str(self.currency) + str(self.date)
+        return "%s - %s" % (self.currency, self.date)
 
 # Stock Model
 class Stock(models.Model):
@@ -41,12 +41,15 @@ class Stock(models.Model):
         ordering = ["name"]
 
 # Model keeping track of the user portfolio history
-# Price gives the current portfolio value
-# Profit the profit of that date
-# and invested the amount of money that has been invested (in order to calculated percentages)
+# Price keeps track of the total (all your stocks time their price)
+# Profit keeps track of the current profit (whatever you win, so net-invested)
+# Invested is the amount that has been invested (thus stocks + price_bought + price_sold)
+# Net the the price minus the sell fees (so what we have actually have on our account)
+# Cash keeps track of the past profit. So whenver a stock is sold its profit or loss is added to the cash
 class UserPortfolioHistory(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date = models.DateField()
+
     price = models.FloatField()
     profit = models.FloatField()
     invested = models.FloatField()
