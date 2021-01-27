@@ -58,7 +58,11 @@ def transaction_overview_view(request, *args, **kwargs):
                     diversification_chart_dict[label] += transaction_context["amount"]*transaction_context["current_price"]
                 else:
                     diversification_chart_dict[label] = transaction_context["amount"]*transaction_context["current_price"] 
- 
+    
+    # First add the general Portfolio queryset for new users or in case no portfolio is present
+    if not querysets.keys():
+        querysets["Portfolio"] = {} 
+
     # Add watching queryset by default in case it is not there yet
     if "Watchlist" not in querysets.keys():
         querysets["Watchlist"] = {}
@@ -131,17 +135,24 @@ def transaction_creation_view(request, transaction_type,  *args, **kwargs):
         today = datetime.datetime.today()
         # Split the transaction type so that we know what we have to do
         transaction_type = transaction_type.split("_")
+        currency = CurrencyTicker.objects.get(name='Euro')
         if transaction_type[0]=='new':
             portfolio = transaction_type[1]
             if "watch" in portfolio.lower():
-                my_form = TransactionCreationForm(initial={"date_bought": today, "amount": 0, "portfolio": portfolio})
+                my_form = TransactionCreationForm(initial={"date_bought": today, "amount": 0, "portfolio": portfolio, "price_bought_currency":currency, 'buy_fees_currency': currency, 'sell_fees_currency': currency})
             else:
-                my_form = TransactionCreationForm(initial={"date_bought": today, "portfolio": portfolio})
+                my_form = TransactionCreationForm(initial={"date_bought": today, "portfolio": portfolio, "price_bought_currency":currency, 'buy_fees_currency': currency, 'sell_fees_currency': currency})
         elif transaction_type[0] == "sell":
-            transaction_ids = [int(id) for id in transaction_type[1].split("-")]
-            transaction_amount = Transaction.objects.filter(id__in=transaction_ids)).aggregate(Sum('amount'))
-            transaction_stock = Transaction.objects.get(id=transaction_ids[0]).stock
-            my_form = TransactionCreationForm(initial={"date_bought": today, 'amount': -transaction_amount, 'stock':transaction_stock})
+            transaction_ids = transaction_type[1].split("-")
+            total_amount = 0
+            stock = None
+            for transaction_id in transaction_ids:
+                transaction = Transaction.objects.get(id=transaction_id)
+                if not stock:
+                    stock = transaction.stock
+                total_amount += transaction.amount
+
+            my_form = TransactionCreationForm(initial={"date_bought": today, 'amount': -total_amount, 'stock': stock, "price_bought_currency":currency, 'buy_fees_currency': currency, 'sell_fees_currency': currency})
         else:
             raise Http404("TransactionCreationForm not valid. Please request a valid type.")
     elif request.method == "POST":
@@ -173,7 +184,7 @@ def transaction_creation_view(request, transaction_type,  *args, **kwargs):
 
             # Same for sell fees, however the actual value is here calculated in process_all_download_data task
             today = datetime.datetime.today()
-            currency = CurrencyTicker.objects.get(id=my_form.data["sell_fees_currency"]) 
+            currency = CurrencyTicker.objects.get(id=my_form.data["sell_fees_currency"])
             to_eur_sell = get_currency_history(currency, today)
             transaction.sell_fess_constant = transaction.sell_fees_constant*to_eur_sell
             transaction.sell_fees = 0 # actual sell_fees calculation performed later on in download_stock function
@@ -373,7 +384,7 @@ def transaction_settings_view(request, id):
     if transaction.user == request.user:
         # First retrieve the corresponding settings from the database
         if request.method == "GET":
-            currency = transaction.currency
+            currency = CurrencyTicker.objects.get(name='Euro')
             settings_form = TransactionSettingsForm(initial={"stock":transaction.stock,"portfolio":transaction.portfolio,"amount": transaction.amount, "label":transaction.label, "price_bought":transaction.price_bought, "price_bought_currency": currency, "buy_fees": transaction.buy_fees, "sell_fees": transaction.sell_fees, "buy_fees_constant": transaction.buy_fees_constant, "sell_fees_constant": transaction.sell_fees_constant, "buy_fees_linear": transaction.buy_fees_linear, "sell_fees_linear": transaction.sell_fees_linear, "buy_fees_currency": currency, "sell_fees_currency": currency, "lower_alert":transaction.lower_alert, "lower_alert_currency": currency, "upper_alert":transaction.upper_alert, "upper_alert_currency": currency, "date_bought": transaction.date_bought, "date_sold":transaction.date_sold})
         elif request.method == "POST":
             settings_form = TransactionSettingsForm(request.POST)
@@ -390,25 +401,25 @@ def transaction_settings_view(request, id):
 
                 # Extract the price bought and convert to EUR
                 transaction.date_bought = date
-                currency = CurrencyTicker.objects.get(id=my_form.data["price_bought_currency"])
+                currency = CurrencyTicker.objects.get(id=settings_form.data["price_bought_currency"])
                 to_eur = get_currency_history(currency, transaction.date_bought)
                 transaction.label = settings_form.data["label"]
                 transaction.price_bought = round(float(settings_form.data["price_bought"])*to_eur, 2)
 
                 # Calculate buy fees based on the currency that has been entered
-                currency = CurrencyTicker.objects.get(id=my_form.data["buy_fees_currency"])
+                currency = CurrencyTicker.objects.get(id=settings_form.data["buy_fees_currency"])
                 to_eur = get_currency_history(currency, transaction.date_bought)
                 transaction.buy_fees_linear = settings_form.data["buy_fees_linear"]
-                transaction.buy_fees_constant = round(settings_form.data["buy_fees_constant"]*to_eur, 2)
+                transaction.buy_fees_constant = round(float(settings_form.data["buy_fees_constant"])*to_eur, 2)
                 transaction.buy_fees = round(float(transaction.price_bought)*float(transaction.amount)*float(transaction.buy_fees_linear) + float(transaction.buy_fees_constant), 2)
 
                 # And the sell fees
-                currency = CurrencyTicker.objects.get(id=my_form.data["sell_fees_currency"])
+                currency = CurrencyTicker.objects.get(id=settings_form.data["sell_fees_currency"])
                 today = datetime.date.today()
                 to_eur = get_currency_history(currency, today)
                 transaction_context = get_context(transaction)
                 transaction.sell_fees_linear = settings_form.data["sell_fees_linear"]
-                transaction.sell_fees_constant = settings_form.data["sell_fees_constant"]*to_eur
+                transaction.sell_fees_constant = round(float(settings_form.data["sell_fees_constant"])*to_eur, 2)
                 transaction.sell_fees = round(float(transaction.sell_fees_constant) + float(transaction.sell_fees_linear)*transaction_context["amount"]*transaction_context["current_price"], 2)
 
                 # Set alerts
@@ -418,18 +429,18 @@ def transaction_settings_view(request, id):
                 if transaction.lower_alert == "":
                     transaction.lower_alert = None
                 else: 
-                    currency = CurrencyTicker.objects.get(id=my_form.data["lower_alert_currency"])
+                    currency = CurrencyTicker.objects.get(id=settings_form.data["lower_alert_currency"])
                     today = datetime.date.today()
                     to_eur = get_currency_history(currency, today)
-                    transaction.lower_alert = transaction.lower_alert*to_eur
+                    transaction.lower_alert = round(float(transaction.lower_alert)*to_eur, 2)
                 # Same for the upper alerts 
                 if transaction.upper_alert == "":
                     transaction.upper_alert = None
                 else: 
-                    currency = CurrencyTicker.objects.get(id=my_form.data["upper_alert_currency"])
+                    currency = CurrencyTicker.objects.get(id=settings_form.data["upper_alert_currency"])
                     today = datetime.date.today()
                     to_eur = get_currency_history(currency, today)
-                    transaction.upper_alert = round(transaction.upper_alert*to_eur, 2)
+                    transaction.upper_alert = round(float(transaction.upper_alert)*to_eur, 2)
 
                 # Set the portfolio
                 transaction.portfolio = settings_form.data["portfolio"]

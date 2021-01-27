@@ -20,9 +20,9 @@ class DateRangeForm(forms.Form):
 
 # Form used for the creation of new transaction in the transaction overview
 class TransactionCreationForm(forms.ModelForm):
-    price_bought_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
-    buy_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
-    sell_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
+    price_bought_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None)
+    buy_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None)
+    sell_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None)
     class Meta:
         model = Transaction
         fields = ['stock', 'amount', 'portfolio','label', 'date_bought', "price_bought", "buy_fees_linear", "buy_fees_constant", "sell_fees_linear", "sell_fees_constant"]
@@ -30,11 +30,11 @@ class TransactionCreationForm(forms.ModelForm):
 
 # Form used for the management of transactions in the transaction overview
 class TransactionSettingsForm(forms.ModelForm):
-    price_bought_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
-    buy_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
-    sell_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
-    lower_alert_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
-    upper_alert_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all())
+    price_bought_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None)
+    buy_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None)
+    sell_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None)
+    lower_alert_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None)
+    upper_alert_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None)
     class Meta:
         model = Transaction
         fields = ['stock','amount','portfolio','label','date_bought',"price_bought",'buy_fees_linear','buy_fees_constant', "date_sold", "price_sold",'sell_fees_linear','sell_fees_constant','lower_alert','upper_alert']
