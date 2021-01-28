@@ -33,7 +33,7 @@ class TransactionSettingsForm(forms.ModelForm):
     price_bought_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None, required=False)
     price_sold_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None, required=False)
     buy_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None, required=False)
-sell_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None, required=False)
+    sell_fees_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None, required=False)
     lower_alert_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None, required=False)
     upper_alert_currency = forms.ModelChoiceField(queryset=CurrencyTicker.objects.all(), empty_label=None, required=False)
     class Meta:

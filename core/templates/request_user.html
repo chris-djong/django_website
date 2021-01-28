@@ -6,24 +6,32 @@
 {% block stylesheets %}{% endblock stylesheets %}
 
 {% block content %}
-
-<div class="row">
-  <div class=col-12>
-    <div class="card">
-      <div class="card-body">
-        <form action="." method="POST">
-          {% csrf_token %}
-          <div class="row"> 
-            <div class="col-3"> 
-              Requested user: {{ form.user }} 
-            </div>
-            <input type="submit" value="Download"/>
-          </div> 
-        </form>
-      </div>
+<tr class="d-flex">
+  <div class="card text-white">
+    <div class="card-body"> 
+      <form action="." method="POST">
+        {% csrf_token %}
+        <table class='table'>
+          <tr class='d-flex'>
+            <td class='col-12'>
+              {{ form.user | as_crispy_field }} 
+            </td>
+          </tr>
+          <tr class='d-flex'>
+            <td class=col-12>
+              {{ form.errors }}
+            </td>
+          </tr>
+          <tr class='d-flex'>
+            <td class="col-6">
+              <input type="submit" value="Submit"/>
+            </td>
+          </tr>
+        </table>
+      </form>
     </div>
   </div>
-</div>
+</tr>
 
 {% endblock content %}
 
