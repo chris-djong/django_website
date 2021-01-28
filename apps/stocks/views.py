@@ -81,27 +81,22 @@ def transaction_overview_view(request, *args, **kwargs):
     user_portfolio_history = user_portfolio_history.order_by('-date')   # this means idx 0 is the newest value and index -1 the oldest
 
     # Create plotting data
-    print("User portfolio history given by:", user_portfolio_history)
     print("This is printed by overview view so that portfolio plot loop can be removed")
-
-    portfolio_plot_labels = []
-    portfolio_plot_data = []
-    portfolio_plot_profit = []
-    for data in user_portfolio_history:
-        portfolio_plot_labels.append(data.date.strftime("%Y-%m-%d"))
-        portfolio_plot_data.append(data.price)
-        portfolio_plot_profit.append(data.profit)
+    portfolio_plot = pd.DataFrame.from_records(user_portfolio_history.values('date', 'price', 'profit'))
+    portfolio_plot_labels = pd.to_datetime(portfolio_plot['date']).dt.strftime("%Y-%m-%d").to_list()
+    portfolio_plot_data = portfolio_plot['price'].to_list()
+    portfolio_plot_profit = portfolio_plot['profit'].to_list()
     
     # In case we have not enough values to calculate the daily change just set it to 0
     if (len(user_portfolio_history) < 2) or ((len(user_portfolio_history) == 2) and (daily_from_today)):
         daily_change = 0
         daily_change_perc = 0
     elif daily_from_today:
-        daily_change = round(user_portfolio_history[1] - user_portfolio_history[0], 2)
-        daily_change_perc = round(daily_change/user_portfolio_history[1], 2) if user_portfolio_history[1] else 0
+        daily_change = round(user_portfolio_history[0].price - user_portfolio_history[1].price, 2)
+        daily_change_perc = round(daily_change/user_portfolio_history[1].price*100, 2) if user_portfolio_history[1].price else 0
     else:
-        daily_change = user_portfolio_history[2] - user_portfolio_history[1]
-        daily_change_perc = round(daily_change/user_portfolio_history[2], 2) if user_portfolio_history[2] else 0
+        daily_change = round(user_portfolio_history[1].price - user_portfolio_history[2].price, 2)
+        daily_change_perc = round(daily_change/user_portfolio_history[2].price*100, 2) if user_portfolio_history[2].price else 0
 
     if len(user_portfolio_history):
         initial_total_stocks = round(user_portfolio_history[0].invested, 2)
