@@ -28,10 +28,15 @@ def transaction_overview_view(request, *args, **kwargs):
     # Also create the datasets for the diversification chart
     diversification_chart_dict = {}
 
+    # Assume the data is not from today until we found one stop which is from today
+    daily_from_today = False
+
     for transaction in portfolio:
         ## Calculate and store relevant data
         transaction_context = get_context(transaction)
-        
+        if not transaction_context["exchange_closed"]:
+            daily_from_today = True
+
         # Check whether we created the portfolio already
         portfolio = transaction_context["portfolio"]
         if portfolio not in querysets:
@@ -73,9 +78,12 @@ def transaction_overview_view(request, *args, **kwargs):
     diversification_chart_colors = ["#61829F"]*len(diversification_chart_values)
     # Create data for portfolio hisotry plotting
     user_portfolio_history = UserPortfolioHistory.objects.filter(user=request.user)
-    user_portfolio_history = user_portfolio_history.order_by('date').reverse()
+    user_portfolio_history = user_portfolio_history.order_by('-date')   # this means idx 0 is the newest value and index -1 the oldest
 
     # Create plotting data
+    print("User portfolio history given by:", user_portfolio_history)
+    print("This is printed by overview view so that portfolio plot loop can be removed")
+
     portfolio_plot_labels = []
     portfolio_plot_data = []
     portfolio_plot_profit = []
@@ -84,39 +92,28 @@ def transaction_overview_view(request, *args, **kwargs):
         portfolio_plot_data.append(data.price)
         portfolio_plot_profit.append(data.profit)
     
-    # Obtain daily change
-    index_error = False
-    try:
-        daily_change = round((portfolio_plot_data[0] - portfolio_plot_data[1]), 2)
-        daily_change_perc = round((daily_change/portfolio_plot_data[0]*100), 2)
-    except (IndexError, ZeroDivisionError) as e:
-        index_error = True
+    # In case we have not enough values to calculate the daily change just set it to 0
+    if (len(user_portfolio_history) < 2) or ((len(user_portfolio_history) == 2) and (daily_from_today)):
+        daily_change = 0
+        daily_change_perc = 0
+    elif daily_from_today:
+        daily_change = round(user_portfolio_history[1] - user_portfolio_history[0], 2)
+        daily_change_perc = round(daily_change/user_portfolio_history[1], 2) if user_portfolio_history[1] else 0
+    else:
+        daily_change = user_portfolio_history[2] - user_portfolio_history[1]
+        daily_change_perc = round(daily_change/user_portfolio_history[2], 2) if user_portfolio_history[2] else 0
 
-    # Find out whether all of the exchanges are still closed
-    daily_from_today = True
-    if index_error:
-        daily_from_today = False
-        try:
-            daily_change = round((portfolio_plot_data[0] - portfolio_plot_data[1]), 2)
-            daily_change_perc = round((daily_change/portfolio_plot_data[0]*100), 2)
-        except (IndexError, ZeroDivisionError):
-            daily_change = 0
-            daily_change_perc = 0
-
-
-    try:
+    if len(user_portfolio_history):
         initial_total_stocks = round(user_portfolio_history[0].invested, 2)
         current_total_stocks = round(user_portfolio_history[0].price, 2)
         current_total_profit = round(user_portfolio_history[0].profit, 2)
         current_total_net = round(user_portfolio_history[0].net, 2)
-        current_total_cash = round(user_portfolio_history[0].cash, 2)
-    except IndexError:
-        print("Index error for user portfolio history")
+    else:
         initial_total_stocks = 0
         current_total_stocks = 0
         current_total_profit = 0
         current_total_net = 0
-        current_total_cash = 0
+
     # And calculate the percentage
     if initial_total_stocks == 0:
         current_total_profit_perc = 0
@@ -124,7 +121,7 @@ def transaction_overview_view(request, *args, **kwargs):
         current_total_profit_perc = round(current_total_profit/initial_total_stocks*100, 2)
 
     # Add all the required variables to the context for processing by the template
-    my_context = {"daily_change": daily_change, "daily_change_perc": daily_change_perc, "querysets": querysets, "portfolio_plot_labels": portfolio_plot_labels, "portfolio_plot_data": portfolio_plot_data, "portfolio_plot_profit": portfolio_plot_profit, "current_total_net": current_total_net, "initial_total_stocks": initial_total_stocks, "current_total": current_total_stocks,"current_total_profit":current_total_profit, "current_total_profit_perc":current_total_profit_perc, "diversification_chart_labels": diversification_chart_labels, "diversification_chart_values":diversification_chart_values, "diversification_chart_colors": diversification_chart_colors, "daily_from_today": daily_from_today, "current_total_cash": current_total_cash}
+    my_context = {"daily_change": daily_change, "daily_change_perc": daily_change_perc, "querysets": querysets, "portfolio_plot_labels": portfolio_plot_labels, "portfolio_plot_data": portfolio_plot_data, "portfolio_plot_profit": portfolio_plot_profit, "current_total_net": current_total_net, "initial_total_stocks": initial_total_stocks, "current_total": current_total_stocks,"current_total_profit":current_total_profit, "current_total_profit_perc":current_total_profit_perc, "diversification_chart_labels": diversification_chart_labels, "diversification_chart_values":diversification_chart_values, "diversification_chart_colors": diversification_chart_colors, "daily_from_today": daily_from_today}
     return render(request, "transaction_overview.html", my_context)
 
 # View for creation of new stocks
