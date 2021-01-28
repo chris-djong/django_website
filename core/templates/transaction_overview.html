@@ -12,8 +12,9 @@
 <div class="row">
   <div class="col-12">
     <div class="alert alert-warning"> 
-      <p class='text-black'>Totals have been fixed.</p>	  
-      <p class='text-black'> Add total of portfolio itself - see nginx caching possibilities (hourly) - Add user portfolio loop to main transaction loop. Daily_from_today calculation, Settings history, settings combined, stock change news ticker, trans_del, trans_hist. Check removal of while loops with latest function. Update fake settings view. Check mail CC problem. Dont download stocks if entry present already. Add balance sheet, key stats and dividends (and automatic download using dates provided) </p>
+      <p class='text-black'>Portfolio totals have been added. Combined totals contain ALL historical data. Portfolio totals contain ONLY data from the current trades.</p>	  
+      <p class='text-black'>Next todos: Stock analyser using Balance sheets, dividend payouts and key statistics. </p> 
+      {# <p class='text-black'> see nginx caching possibilities (hourly) - reduce amount to col to col-1 - center all numbers right - Add user portfolio loop to main transaction loop. Settings history, settings combined, stock change news ticker, trans_del, trans_hist. Update fake settings view. Check mail CC problem. Dont download stocks if entry present already. Add balance sheet, key stats and dividends (and automatic download using dates provided) </p>  #}
     </div>
   </div>
 </div>
@@ -524,66 +525,66 @@
                 <!-- Row containing portfolio totals in desktop -->
                 <tr class="d-flex">
                   <td class="text-left col-7">
-                    Totals
+		    {{ portfolio}} Totals
                   </td>
                   <!-- Total daily change perc for portfolio -->
-                  {% if not queryset.portfolio_values_.daily_from_today %}
-                  {% if queryset.portfolio_values_.daily_change_perc > 0 %}
+                  {% if not queryset.total_values_.daily_from_today %}
+                  {% if queryset.total_values_.daily_change_perc > 0 %}
                   <td class="col-1 text-right"> 
                     <span class="text-warning">
-                      {{ queryset.portfolio_values_.daily_change }}
+                      {{ queryset.total_values_.daily_change }}
                     </span> 
                     <span class="text-success">
-                      ({{ queryset.portfolio_values_.daily_change_perc }}%)
+                      ({{ queryset.total_values_.daily_change_perc }}%)
                     </span>
                   </td>
-                  {% else %}  {# this is for queryset.portfolio_values_.daily_change_perc <= 0 #}
-                  {% if queryset.portfolio_values_.daily_change_perc < 0 %}
+                  {% else %}  {# this is for queryset.total_values_.daily_change_perc <= 0 #}
+                  {% if queryset.total_values_.daily_change_perc < 0 %}
                   <td class="col-1 text-right"> 
                     <span class="text-warning">
-                      {{ queryset.portfolio_values_.daily_change }}
+                      {{ queryset.total_values_.daily_change }}
                     </span> 
                     <span class="text-danger">
-                      ({{ queryset.portfolio_values_.daily_change_perc }}%)
+                      ({{ queryset.total_values_.daily_change_perc }}%)
                     </span>
                   </td>
-                  {% else %}  {# this is for queryset.portfolio_values_.daily_change_perc == 0 #}
+                  {% else %}  {# this is for queryset.total_values_.daily_change_perc == 0 #}
                   <td class="col-1 text-right"> 
                     <span class="text-warning">
-                      {{ queryset.portfolio_values_.daily_change }} ({{ queryset.portfolio_values_.daily_change_perc }}%)
+                      {{ queryset.total_values_.daily_change }} ({{ queryset.total_values_.daily_change_perc }}%)
                     </span>
                   </td>
-                  {% endif %}  {# ending queryset.portfolio_values_.daily change perc < 0 #}
-                  {% endif %}  {# ending queryset.portfolio_values_.daily change perc > 0 #}
-                  {% else %}  {# else so if queryset.portfolio_values_.daily_from_today #}
-                  {% if queryset.portfolio_values_.daily_change_perc > 3 %}
+                  {% endif %}  {# ending queryset.total_values_.daily change perc < 0 #}
+                  {% endif %}  {# ending queryset.total_values_.daily change perc > 0 #}
+                  {% else %}  {# else so if queryset.total_values_.daily_from_today #}
+                  {% if queryset.total_values_.daily_change_perc > 3 %}
                   <td class="col-1 text-right text-black bg-success">
                     <span class="text-black">
-                      {{queryset.portfolio_values_.daily_change}} ({{queryset.portfolio_values_.daily_change_perc}}%)
+                      {{queryset.total_values_.daily_change}} ({{ queryset.total_values_.daily_change_perc}}%)
                     </span>
                   </td>
-                  {% else %} {# this is for queryset.portfolio_values_.daily_change_perc <= 3 #}
-                  {% if daily_change_perc > 0 %}
+                  {% else %} {# this is for queryset.total_values_.daily_change_perc <= 3 #}
+                  {% if queryset.total_values_.daily_change_perc > 0 %}
                   <td class="col-1 text-right">
                     <span class="text-success">
-                      {{queryset.portfolio_values_.daily_change}} ({{queryset.portfolio_values_.daily_change_perc}}%)
+                      {{queryset.total_values_.daily_change}} ({{queryset.total_values_.daily_change_perc}}%)
                     </span>
                   </td>
-                  {% else %} {# this is for queryset.portfolio_values_.daily_change_perc <= 0 #}
-                  {% if queryset.portfolio_values_.daily_change_perc < -3 %}
+                  {% else %} {# this is for queryset.total_values_.daily_change_perc <= 0 #}
+                  {% if queryset.total_values_.daily_change_perc < -3 %}
                   <td class="col-1 text-right bg-danger">
-                    {{queryset.portfolio_values_.daily_change}} ({{queryset.portfolio_values_.daily_change_perc}}%)
+                    {{queryset.total_values_.daily_change}} ({{queryset.total_values_.daily_change_perc}}%)
                   </td>
-                  {% else %} {# this is for queryset.portfolio_values_.daily_change_perc between 0 and -3 #}
-                  {% if queryset.portfolio_values_.daily_change_perc < 0 %}
+                  {% else %} {# this is for queryset.total_values_.daily_change_perc between 0 and -3 #}
+                  {% if queryset.total_values_.daily_change_perc < 0 %}
                   <td class="col-1 text-right">
                     <span class="text-danger">
-                      {{queryset.portfolio_values_.daily_change}} ({{queryset.portfolio_values_.daily_change_perc}}%)
+                      {{queryset.total_values_.daily_change}} ({{queryset.total_values_.daily_change_perc}}%)
                     </span>                       </td>
-                  {% else %}  {# this is for queryset.portfolio_values_.daily_change_perc == 0 #}
+                  {% else %}  {# this is for queryset.total_values_.daily_change_perc == 0 #}
                   <td class="col-1 text-right">
                     <span class="text-warning">
-                      {{queryset.portfolio_values_.daily_change}} ({{queryset.portfolio_values_.daily_change_perc}}%)
+                      {{queryset.total_values_.daily_change}} ({{queryset.total_values_.daily_change_perc}}%)
                     </span>      
                   </td>
                   {% endif %}
@@ -593,24 +594,24 @@
                   {% endif %}
                   <!-- Total net -->
                   <td class="col-1 text-right">
-                    {{ queryset.portfolio_values_.net_total }}
+                    {{ queryset.total_values_.net_total }}
                   </td>
                   <!-- Total profit -->
-                  {% if queryset.portfolio_values_.total_profit > 0 %}  
+                  {% if queryset.total_values_.total_profit > 0 %}  
                   <td class="col-1 text-right">
                     <span class='text-success'>
-                      {{queryset.portfolio_values_.total_profit}} ({{queryset.portfolio_values_.total_profit_perc}}%)
+                      {{queryset.total_values_.total_profit}} ({{queryset.total_values_.total_profit_perc}}%)
                     </span>
                   </td>
-                  {% else %}  {# this is for queryset.portfolio_values_.total_profit <= 0 #}
-                  {% if queryset.portfolio_values_.total_profit == 0 %}
+                  {% else %}  {# this is for queryset.total_values_.total_profit <= 0 #}
+                  {% if queryset.total_values_.total_profit == 0 %}
                   <td class="col-1 text-right">
-                      {{queryset.portfolio_values_.total_profit}} ({{queryset.portfolio_values_.total_profit_perc}}%)
+                      {{queryset.total_values_.total_profit}} ({{queryset.total_values_.total_profit_perc}}%)
                   </td>
                   {% else %} {# current total profit is negative #}
                   <td class="col-1 text-right">
                     <span class='text-danger'>
-                      {{queryset.portfolio_values_.total_profit}} ({{queryset.portfolio_values_.total_profit_perc}}%)
+                      {{queryset.total_values_.total_profit}} ({{queryset.total_values_.total_profit_perc}}%)
                     </span>
                   </td>
                   {% endif %}
@@ -629,7 +630,7 @@
                 <!-- Row containing combined totals in desktop -->
                 <tr class="d-flex">
                   <td class="text-left col-7">
-                    Totals
+                    Combined Totals
                   </td>
                   <!-- Total daily change perc-->
                   {% if not daily_from_today %}

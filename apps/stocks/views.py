@@ -4,7 +4,7 @@ from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .functions import get_stock_price_date, get_transactions, get_portfolio, get_prev_weekday, get_context, obtain_start_date, get_currency_history
-from .tasks import download_all_stocks_since, download_stock_since, download_every_user_portfolio_history, download_user_portfolio_history_since, merge_transactions, download_all_stocks_today
+from .tasks import download_all_stocks_since, download_stock_since, download_every_user_portfolio_history, download_user_portfolio_history_since, merge_transactions, download_all_stocks_today, process_download_data
 from .forms import TransactionCreationForm, TransactionSettingsForm, StockCreationForm, StockSettingsForm, TransactionWatchForm, UserForm, DateForm, DateRangeForm
 from .models import Transaction, StockPriceHistory, UserPortfolioHistory, Stock, CurrencyTicker
 from django.contrib.auth.models import User
@@ -55,34 +55,19 @@ def transaction_overview_view(request, *args, **kwargs):
             querysets[portfolio]["total_values_"]['total_yesterday'] = 0
             querysets[portfolio]["total_values_"]['initial_total'] = 0
 
-
         # Set label to string for error handling
         if (transaction.label is None):
             transaction.label = ""
 
         # Now we have to split the labels which are saved using / as seperator 
         labels = transaction.label.split("/")
+
         # Loop through the labels
         for i in range(len(labels)):
             label = labels[i]
             # So that the user is not able to overwrite our total_values of the portfolio
             if label == 'total_values_':
                 label = 'total_values'  
-            
-            # Add the respective amounts to the total changes
-            price_today = transaction_context['current_price']
-            daily_change = transaction_context['daily_change']
-            price_yesterday = price_today - daily_change
-            amount = transaction_context['amount']
-            profit = transaction_context['total_profit']
-            
-            querysets[portfolio]["total_values_"]['daily_change'] += round(amount * daily_change, 2)
-            querysets[portfolio]["total_values_"]['total_yesterday'] += round(amount * price_yesterday, 2)  # to calculate total daily change perc at the end of the loop
-            querysets[portfolio]["total_values_"]['net_total'] += round(transaction_context['current_total_net'], 2)
-            querysets[portfolio]["total_values_"]['total_profit'] += round(profit, 2)
-            querysets[portfolio]["total_values_"]['initial_total'] += amount*transaction_context['initial_price'] + transaction_context['buy_fees'] + transaction_context['sell_fees']  # and to calculate the total profit perc
-            if not transaction_context["exchange_closed"]:
-                querysets[portfolio]["total_values_"]['daily_from_today'] = True
 
             # We only add the first label to the queryset for generation of the overview
             if i == 0:
@@ -97,10 +82,30 @@ def transaction_overview_view(request, *args, **kwargs):
                 else:
                     diversification_chart_dict[label] = transaction_context["amount"]*transaction_context["current_price"] 
     
+        # Add the respective amounts to the total changes
+        price_today = transaction_context['current_price']
+        daily_change = transaction_context['daily_change']
+        price_yesterday = price_today - daily_change
+        amount = transaction_context['amount']
+        profit = transaction_context['total_profit']
+        
+        querysets[portfolio]["total_values_"]['daily_change'] += amount * daily_change
+        querysets[portfolio]["total_values_"]['total_yesterday'] += amount * price_yesterday  # to calculate total daily change perc at the end of the loop
+        querysets[portfolio]["total_values_"]['net_total'] += transaction_context['current_total_net']
+        querysets[portfolio]["total_values_"]['total_profit'] += profit
+        querysets[portfolio]["total_values_"]['initial_total'] += amount*transaction_context['initial_price'] + transaction_context['buy_fees'] + transaction_context['sell_fees']  # and to calculate the total profit perc
+
+        if not transaction_context["exchange_closed"]:
+            querysets[portfolio]["total_values_"]['daily_from_today'] = True
+
     # Calculate portfolio percentages and remove temporary keys
     for portfolio in querysets.keys():
-        querysets[portfolio]['total_values_']['daily_change_perc'] = round(querysets[portfolio]["total_values_"]['daily_change']/querysets[portfolio]["total_values_"]['total_yesterday'], 2) if querysets[portfolio]["total_values_"]['total_yesterday'] else 0
-        querysets[portfolio]["total_values_"]['total_profit_perc'] = round(querysets[portfolio]["total_values_"]['total_profit']/querysets[portfolio]["total_values_"]['initial_total'], 2) if querysets[portfolio]["total_values_"]['initial_total'] else 0
+        querysets[portfolio]['total_values_']['daily_change_perc'] = round(querysets[portfolio]["total_values_"]['daily_change']/querysets[portfolio]["total_values_"]['total_yesterday']*100, 2) if querysets[portfolio]["total_values_"]['total_yesterday'] else 0
+        querysets[portfolio]["total_values_"]['total_profit_perc'] = round(querysets[portfolio]["total_values_"]['total_profit']/querysets[portfolio]["total_values_"]['initial_total']*100, 2) if querysets[portfolio]["total_values_"]['initial_total'] else 0
+        querysets[portfolio]["total_values_"]['total_profit'] = round(querysets[portfolio]["total_values_"]['total_profit'], 2)
+        querysets[portfolio]["total_values_"]['daily_change'] = round(querysets[portfolio]["total_values_"]['daily_change'], 2)
+        querysets[portfolio]["total_values_"]['net_total'] = round(querysets[portfolio]["total_values_"]['net_total'], 2)
+
         querysets[portfolio]["total_values_"].pop('initial_total')
         querysets[portfolio]["total_values_"].pop('total_yesterday')
 
