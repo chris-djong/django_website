@@ -1,6 +1,8 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}Request date{% endblock %} 
+{% load crispy_forms_tags %}
+
+{% block title %}Stock Analysis{% endblock %} 
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}{% endblock stylesheets %}
@@ -14,18 +16,16 @@
         {% csrf_token %}
         <table class='table'>
           <tr class='d-flex'>
-            <td class='col-12'>
+            <td class='col-8'>
               {{ form.stock | as_crispy_field }} 
+            </td>
+            <td class='col-4'>
+              <input type="submit" value="Submit"/>
             </td>
           </tr>
           <tr class='d-flex'>
             <td class=col-12>
               {{ form.errors }}
-            </td>
-          </tr>
-          <tr class='d-flex'>
-            <td class="col-6">
-              <input type="submit" value="Submit"/>
             </td>
           </tr>
         </table>
