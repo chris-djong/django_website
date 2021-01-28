@@ -202,7 +202,6 @@ def transaction_creation_view(request, transaction_type,  *args, **kwargs):
             if transaction.price_bought is None:
                 data = get_stock_price_date(transaction.stock, transaction.date_bought)
                 transaction.price_bought = round(data["close"], 2)
-
             else:  # in case we have entered a price bought calculate the price in eur 
                 currency = CurrencyTicker.objects.get(id=my_form.data["price_bought_currency"]) 
                 to_eur = get_currency_history(currency, transaction.date_bought)
@@ -254,20 +253,6 @@ def transaction_delete_view(request, id, *args, **kwargs):
             return render(request, "transaction_delete.html", context)
     else:
         raise Http404("No transaction matches the given query.")
-
-# Combined settings overview in case stocks are merged
-@login_required(login_url="login")
-def transaction_settings_combined_view(request, ids):
-    transactions = Transaction.objects.filter(id__in=ids.split("-"))
-    # List with dictionaries for final context
-    queryset = {"": []}     # queryset = {"label1": [transaction1, transaction2, transaction3], "label2: [transaction1, transaction2, transaction3]"} 
-    # Also create the datasets for the diversification chart
-    for transaction in transactions:
-        ## Calculate and store relevant data
-        transaction_context = get_context(transaction)
-        queryset[""].append(transaction_context)
-    context = {"queryset": queryset}
-    return render(request, "transaction_settings_combined.html", context)
 
 @login_required(login_url="login")
 def user_portfolio_download_view(request):
@@ -345,61 +330,6 @@ def stock_change_article_ticker_view(request, id):
     context = {"form": settings_form, 'name': stock.name}
     return render(request, "stock_change_news_ticker.html", context)
 
-# View that manages and stores settings for history view (here dates can all be changed and alerts have been removed) 
-@login_required(login_url="login")
-def transaction_settings_history_view(request, id):
-    transaction = get_object_or_404(Transaction, id=id)
-
-    if transaction.user == request.user:
-        # First retrieve the corresponding settings from the database
-        if request.method == "GET":
-            settings_form = TransactionSettingsForm(initial={"stock":transaction.stock,"amount": transaction.amount, "label":transaction.label, "price_bought":transaction.price_bought, "buy_fees": transaction.buy_fees, "sell_fees": transaction.sell_fees, "buy_fees_constant": transaction.buy_fees_constant, "sell_fees_constant": transaction.sell_fees_constant, "buy_fees_linear": transaction.buy_fees_linear, "sell_fees_linear": transaction.sell_fees_linear, "lower_alert":transaction.lower_alert, "upper_alert":transaction.upper_alert, "date_bought": transaction.date_bought, "date_sold":transaction.date_sold, "price_sold": transaction.price_sold})
-        elif request.method == "POST":
-            settings_form = TransactionSettingsForm(request.POST)
-            if settings_form.is_valid():
-                # If the form is valid get the relevant stock
-                transaction = get_object_or_404(Transaction, id=id)
-                # And update the settings
-                transaction.stock = get_object_or_404(Stock, id=settings_form.data['stock'])
-                transaction.amount = settings_form.data['amount']
-                date = datetime.date(int(settings_form.data['date_bought_year']), int(settings_form.data['date_bought_month']), int(settings_form.data['date_bought_day']))
-                if date.weekday() >= 5:
-                    date = get_prev_weekday(date)
-                transaction.date_bought = date
-                transaction.price_bought = float(settings_form.data["price_bought"])
-
-                if settings_form.data['date_sold_year'] != '' and settings_form.data['date_sold_month'] != "" and settings_form.data['date_sold_year'] != "":
-                    date = datetime.date(int(settings_form.data['date_sold_year']), int(settings_form.data['date_sold_month']), int(settings_form.data['date_sold_day']))
-                    if date.weekday() >= 5:
-                        date = get_prev_weekday(date)
-                    transaction.date_sold = date
-                if settings_form.data["price_sold"] != '':
-                    transaction.price_sold = float(settings_form.data["price_sold"])
-
-                # Calculate buy fees
-                transaction.buy_fees_linear = settings_form.data["buy_fees_linear"]
-                transaction.buy_fees_constant = settings_form.data["buy_fees_constant"]
-                transaction.buy_fees = float(transaction.price_bought)*float(transaction.amount)*float(transaction.buy_fees_linear) + float(transaction.buy_fees_constant)
-
-                # And the sell fees
-                transaction_context = get_context(transaction)
-                transaction.sell_fees_linear = settings_form.data["sell_fees_linear"]
-                transaction.sell_fees_constant = settings_form.data["sell_fees_constant"]
-                transaction.sell_fees = float(transaction.sell_fees_constant) + float(transaction.sell_fees_linear)*transaction_context["amount"]*transaction_context["current_price"]
-
-                # Finally save them
-                transaction.save()
-
-                download_user_portfolio_history_since.delay(username=request.user.username, date=transaction.date_bought)
-                return redirect("history")
-            else:
-                # Throw an error?
-                raise Http404("Transaction settings form not valid.")
-            
-        context = {"form": settings_form}
-        return render(request, "transaction_settings_history.html", context)
-    else:
-        raise Http404("No Stock matches the given query.")
 
 # View that manages and stores settings 
 @login_required(login_url="login")
@@ -420,17 +350,22 @@ def transaction_settings_view(request, id):
                 # And update the settings
                 transaction.stock = get_object_or_404(Stock, id=settings_form.data['stock'])
                 transaction.amount = settings_form.data['amount']
-                date = datetime.date(int(settings_form.data['date_bought_year']), int(settings_form.data['date_bought_month']), int(settings_form.data['date_bought_day']))
-                if date.weekday() >= 5:
-                    date = get_prev_weekday(date)
-
-
-                # Extract the price bought and convert to EUR
-                transaction.date_bought = date
-                currency = CurrencyTicker.objects.get(id=settings_form.data["price_bought_currency"])
-                to_eur = get_currency_history(currency, transaction.date_bought)
                 transaction.label = settings_form.data["label"]
-                transaction.price_bought = round(float(settings_form.data["price_bought"])*to_eur, 2)
+
+                # Obtain the date_bought
+                date_bought = datetime.date(int(settings_form.data['date_bought_year']), int(settings_form.data['date_bought_month']), int(settings_form.data['date_bought_day']))
+                if date_bought.weekday() >= 5:
+                    date_bought = get_prev_weekday(date_bought)
+                transaction.date_bought = date
+
+                # Then calculate the price bought from history or use the input depending on user choice
+                if settings_form.data['price_bought'] is None:
+                    data = get_stock_price_date(transaction.stock, transaction.date_bought)
+                    transaction.price_bought = round(data["close"], 2)
+                else: 
+                    currency = CurrencyTicker.objects.get(id=settings_form.data["price_bought_currency"])
+                    to_eur = get_currency_history(currency, transaction.date_bought)
+                    transaction.price_bought = round(float(settings_form.data["price_bought"])*to_eur, 2)
 
                 # Calculate buy fees based on the currency that has been entered
                 currency = CurrencyTicker.objects.get(id=settings_form.data["buy_fees_currency"])
@@ -439,7 +374,7 @@ def transaction_settings_view(request, id):
                 transaction.buy_fees_constant = round(float(settings_form.data["buy_fees_constant"])*to_eur, 2)
                 transaction.buy_fees = round(float(transaction.price_bought)*float(transaction.amount)*float(transaction.buy_fees_linear) + float(transaction.buy_fees_constant), 2)
 
-                # And the sell fees
+                # And the sell fees based on the respective currency
                 currency = CurrencyTicker.objects.get(id=settings_form.data["sell_fees_currency"])
                 today = datetime.date.today()
                 to_eur = get_currency_history(currency, today)
@@ -492,6 +427,99 @@ def transaction_settings_view(request, id):
         return render(request, "transaction_settings.html", context)
     else:
         raise Http404("No Stock matches the given query.")
+
+# Combined settings overview in case stocks are merged
+@login_required(login_url="login")
+def transaction_settings_combined_view(request, ids):
+    transactions = Transaction.objects.filter(id__in=ids.split("-"))
+    # List with dictionaries for final context
+    queryset = {"": []}     # queryset = {"label1": [transaction1, transaction2, transaction3], "label2: [transaction1, transaction2, transaction3]"} 
+    # Also create the datasets for the diversification chart
+    for transaction in transactions:
+        ## Calculate and store relevant data
+        transaction_context = get_context(transaction)
+        queryset[""].append(transaction_context)
+    context = {"queryset": queryset}
+    return render(request, "transaction_settings_combined.html", context)
+
+
+# View that manages and stores settings for history view (here dates can all be changed and alerts have been removed) 
+@login_required(login_url="login")
+def transaction_settings_history_view(request, id):
+    transaction = get_object_or_404(Transaction, id=id)
+
+    if transaction.user == request.user:
+        # First retrieve the corresponding settings from the database
+        if request.method == "GET":
+            currency = CurrencyTicker.objects.get(name='Euro')
+            settings_form = TransactionSettingsForm(initial={"stock":transaction.stock,"amount": transaction.amount, "label":transaction.label, "price_bought":transaction.price_bought, "price_bought_currency": currency, "buy_fees": transaction.buy_fees, "buy_fees_currency": currency, "sell_fees": transaction.sell_fees, "sell_fees_currency": currency, "buy_fees_constant": transaction.buy_fees_constant, "sell_fees_constant": transaction.sell_fees_constant, "buy_fees_linear": transaction.buy_fees_linear, "sell_fees_linear": transaction.sell_fees_linear, "lower_alert":transaction.lower_alert, "upper_alert":transaction.upper_alert, "date_bought": transaction.date_bought, "date_sold":transaction.date_sold, "price_sold": transaction.price_sold, "price_sold_currency": currency})
+        elif request.method == "POST":
+            settings_form = TransactionSettingsForm(request.POST)
+            if settings_form.is_valid():
+                # If the form is valid get the relevant stock
+                transaction = get_object_or_404(Transaction, id=id)
+
+                # And update all of the settings
+                transaction.stock = get_object_or_404(Stock, id=settings_form.data['stock'])
+                transaction.amount = settings_form.data['amount']
+
+                # Obtain the date bought
+                date_bought = datetime.date(int(settings_form.data['date_bought_year']), int(settings_form.data['date_bought_month']), int(settings_form.data['date_bought_day']))
+                if date_bought.weekday() >= 5:
+                    date_bought = get_prev_weekday(date_bought)
+                transaction.date_bought = date_bought
+
+                # Then calculate the price bought from history or use the input depending on user choice
+                if settings_form.data['price_bought'] is None:
+                    data = get_stock_price_date(transaction.stock, transaction.date_bought)
+                    transaction.price_bought = round(data["close"], 2)
+                else: 
+                    currency = CurrencyTicker.objects.get(id=settings_form.data["price_bought_currency"])
+                    to_eur = get_currency_history(currency, transaction.date_bought)
+                    transaction.price_bought = round(float(settings_form.data["price_bought"])*to_eur, 2)
+
+                # Obtain the date sold
+                date_sold = datetime.date(int(settings_form.data['date_sold_year']), int(settings_form.data['date_sold_month']), int(settings_form.data['date_sold_day']))
+                if date.weekday() >= 5:
+                    date = get_prev_weekday(date)
+                transaction.date_sold = date
+
+                # Then calculate the price sold from history or use the input depending on user choice
+                if settings_form.data['price_sold'] is None:
+                    data = get_stock_price_date(transaction.stock, transaction.date_sold)
+                    transaction.price_sold = round(data["close"], 2)
+                else: 
+                    currency = CurrencyTicker.objects.get(id=settings_form.data["price_sold_currency"])
+                    to_eur = get_currency_history(currency, transaction.date_sold)
+                    transaction.price_sold = round(float(settings_form.data["price_sold"])*to_eur, 2)
+
+                # Calculate buy fees and extract to Eur
+                transaction.buy_fees_linear = settings_form.data["buy_fees_linear"]
+                transaction.buy_fees_constant = settings_form.data["buy_fees_constant"]
+                transaction.buy_fees = round(float(transaction.price_bought)*float(transaction.amount)*float(transaction.buy_fees_linear) + float(transaction.buy_fees_constant), 2)
+
+                # And the sell fees and extract to Eur
+                transaction_context = get_context(transaction)
+                transaction.sell_fees_linear = settings_form.data["sell_fees_linear"]
+                transaction.sell_fees_constant = settings_form.data["sell_fees_constant"]
+                transaction.sell_fees = round(float(transaction.sell_fees_constant) + float(transaction.sell_fees_linear)*transaction_context["amount"]*transaction_context["current_price"], 2)
+
+                # Finally save the transaction
+                transaction.save()
+
+                # And download the user portfolio history for the relevant dates
+                download_user_portfolio_history_since.delay(username=request.user.username, date=transaction.date_bought)
+
+                return redirect("history")
+            else:
+                # Throw an error?
+                raise Http404("Transaction settings form not valid.")
+            
+        context = {"form": settings_form, "sell_fees": transaction.sell_fees,"buy_fees": transaction.buy_fees}
+        return render(request, "transaction_settings_history.html", context)
+    else:
+        raise Http404("No Stock matches the given query.")
+
 
 @login_required(login_url="login")
 def stock_creation_view(request, *args, **kwargs):
