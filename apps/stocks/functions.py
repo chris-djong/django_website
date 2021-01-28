@@ -96,10 +96,12 @@ def download_stock_date(stock, date):
     except (ReadTimeout, ConnectTimeout, ConnectionError):
         print(sys.exc_info()[0])
         print("Request to yahoo finance has timed out for %s." % stock.ticker)
-    except (KeyError, ValueError):
+    except (KeyError):
+        return  # This is whenever the exchange is closed in the morning and no price has been retrieved yet
+    except (ValueError):
         print("Unexpected error:", sys.exc_info()[0])
         print("For %s" % stock.ticker)
-        print("This is probably because no data was retrieved due to an exchange closed or similar error.")
+        print("This  error.")
         print("We try to get data for date", date)
 
 # Obtain portfolio from database for a given user not the sold ones and combine them immediately in case there are more
@@ -238,18 +240,20 @@ def download_stocks_date(stocks, date):
 def get_stock_price_date(stock, date):
     result = {}
     exchange_closed = False
+
     # Query date from database until we have an actual value
     stock_data = StockPriceHistory.objects.filter(ticker=stock, date=date)
     if stock_data.count() == 0:
         download_stock_date(stock, date)
         stock_data = StockPriceHistory.objects.filter(ticker=stock, date=date)
-    # And in case  downloading also did not produce a good result then use a previous value from a previous day
-    i = 0 # Safety net for infinite loop error 
-    while stock_data.count() == 0:
-        date = get_prev_weekday(date)
-        # In case we do not have any data for today inside our database it is assumed that the exchange is closed (this assumes that we first download the data before executing the program)
-        # Example: This should happen in the morning, if one retrieves the prices before the exchange actually opens
-        exchange_closed = True
+
+    # And in case  downloading also did not produce a good result then use the latest value we have in the database
+    if stock_data.count() == 0:
+    stock_data = StockPriceHistory.objects.filter(ticker=stock).order_by('-date')[0]
+    exchange_closed = True
+
+    # Add a logging line in case a lot of values are missing 
+
         stock_data = StockPriceHistory.objects.filter(ticker=stock, date=date)
         # In case we dont have a value for the previous day either try to download it first as well 
         if stock_data.count() == 0:
@@ -404,7 +408,7 @@ def download_user_portfolio_history(date, user):
     total_invested = 0
 
     for transaction in transactions:
-        stock_data = get_context(transaction.stock, date)
+        stock_data = get_context(transaction, date)
         # In case we have sold the stock today add the profit to the cash variable and remove the invested and net amounts
         if transaction.date_sold == date:
             total_cash += stock_data['amount']*(transaction.price_sold - stock_date['initial_price']) - stock_data['sell_fees'] - stock_data['buy_fees']
