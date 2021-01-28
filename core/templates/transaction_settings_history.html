@@ -1,5 +1,7 @@
 {% extends "layouts/base.html" %}
 {% load static %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
 {% block title %} History settings {% endblock %} 
 
 <!-- Specific Page CSS goes HERE  -->
@@ -49,11 +51,8 @@
             </td>
           </tr>
           <tr class='d-flex'>
-            <td class='col-6'>
-              Current buy fees:
-            </td>
-            <td class='col-6'>
-              {{ buy_fees }}
+            <td class='col-12'>
+		    Current buy fees: {{ buy_fees}}
             </td>
           </tr>
           <tr class='d-flex'>
@@ -68,11 +67,8 @@
             </td>
           </tr>
           <tr class='d-flex'>
-            <td class='col-6'>
-              Current sell fees:
-            </td>
-            <td class='col-6'>
-              {{ sell_fees }}
+            <td class='col-12'>
+		    Current sell fees: {{ sell_fees }}
             </td>
           </tr>
           <tr class='d-flex'>
