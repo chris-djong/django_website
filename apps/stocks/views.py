@@ -76,10 +76,10 @@ def transaction_overview_view(request, *args, **kwargs):
             amount = transaction_context['amount']
             profit = transaction_context['total_profit']
             
-            querysets[portfolio]["total_values_"]['daily_change'] += amount * daily_change
-            querysets[portfolio]["total_values_"]['total_yesterday'] += amount * price_yesterday  # to calculate total daily change perc at the end of the loop
-            querysets[portfolio]["total_values_"]['net_total'] += transaction_context['current_total_net']
-            querysets[portfolio]["total_values_"]['total_profit'] += profit
+            querysets[portfolio]["total_values_"]['daily_change'] += round(amount * daily_change, 2)
+            querysets[portfolio]["total_values_"]['total_yesterday'] += round(amount * price_yesterday, 2)  # to calculate total daily change perc at the end of the loop
+            querysets[portfolio]["total_values_"]['net_total'] += round(transaction_context['current_total_net'], 2)
+            querysets[portfolio]["total_values_"]['total_profit'] += round(profit, 2)
             querysets[portfolio]["total_values_"]['initial_total'] += amount*transaction_context['initial_price'] + transaction_context['buy_fees'] + transaction_context['sell_fees']  # and to calculate the total profit perc
             if not transaction_context["exchange_closed"]:
                 querysets[portfolio]["total_values_"]['daily_from_today'] = True
