@@ -421,23 +421,23 @@
                   {% if stock.daily_change > 0 %}
                   {% if stock.exchange_closed %}
                   <td class="col-1 text-right"> 
-                    <span class="text-warning">
+                    <span class="text-warning text-right">
                       {{ stock.daily_change }}
                     </span> 
-                    <span class="text-success">
+                    <span class="text-success text-right">
                       ({{ stock.daily_change_perc }}%)
                     </span>
                   </td>
                   {% else %}  {# if the exchange is open #}
                   {% if stock.daily_change_perc > 3 %}
                   <td class="col-1 text-right bg-success">
-                    <span class="text-black">
+                    <span class="text-black text-right">
                       {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
                     </span>
                   </td>
                   {% else %}  {# if stock daily change perc <=3 and > 0 #}
                   <td class="col-1 text-right">
-                    <span class="text-success">
+                    <span class="text-success text-right">
                       {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
                     </span>
                   </td>
@@ -446,21 +446,21 @@
                   {% else %}  {# meaning daily_change is now <=0 #}
                   {% if stock.exchange_closed %}
                   <td class="col-1 text-right">
-                    <span class="text-warning">
+                    <span class="text-warning text-right">
                       {{ stock.daily_change }}
                     </span> 
-                    <span class="text-danger">
+                    <span class="text-danger text-right">
                       ({{ stock.daily_change_perc }}%)
                     </span>
                   </td>
                   {% else %}   {# if exchange is open #}
                   {% if stock.daily_change_perc < -3 %}
-                  <td class="col-1 text-right bg-danger">
+                  <td class="col-1 text-right bg-danger text-right">
                     {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
                   </td>
                   {% else %}  {# if daily_change_perc >= -3 and <= 0#}
                   <td class="col-1 text-right">
-                    <span class="text-danger">
+                    <span class="text-danger text-right">
                       {{ stock.daily_change }} ({{ stock.daily_change_perc }}%)
                     </span>
                   </td>
@@ -472,14 +472,14 @@
                   </td>
                   {% if stock.total_profit > 0 %}
                   <td class="col-1 text-right">
-                    <span class="text-success">
+                    <span class="text-success text-right">
                       {{stock.total_profit}} ({{ stock.total_profit_perc }}%)
                     </span>
                   </td>
                   {% else %}  {# if total profit negative #}
                   {% if stock.total_profit != 0 %}
                   <td class="col-1 text-right">
-                    <span class="text-danger">
+                    <span class="text-danger text-right">
                       {{stock.total_profit}} ({{ stock.total_profit_perc }}%)
                     </span>
                   </td>
