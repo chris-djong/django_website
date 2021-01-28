@@ -96,7 +96,6 @@ def download_stock_date(stock, date):
     except (ValueError):
         print("Unexpected error:", sys.exc_info()[0])
         print("For %s" % stock.ticker)
-        print("This  error.")
         print("We try to get data for date", date)
 
 # Obtain portfolio from database for a given user not the sold ones and combine them immediately in case there are more
@@ -244,21 +243,15 @@ def get_stock_price_date(stock, date):
 
     # And in case  downloading also did not produce a good result then use the latest value we have in the database
     if stock_data.count() == 0:
-    stock_data = StockPriceHistory.objects.filter(ticker=stock).order_by('-date')[0]
-    exchange_closed = True
+        stock_data = StockPriceHistory.objects.filter(ticker=stock).order_by('-date')[0]
+        exchange_closed = True
 
     # Add a logging line in case a lot of values are missing 
-
-        stock_data = StockPriceHistory.objects.filter(ticker=stock, date=date)
-        # In case we dont have a value for the previous day either try to download it first as well 
-        if stock_data.count() == 0:
-            download_stock_date(stock, date)
-            stock_data = StockPriceHistory.objects.filter(ticker=stock, date=date)
-        i += 1
-        if i > 9:
-            # Error handling
-            print("Could not obtain stock data for stock", stock, "and date", date,"verify that the stock object and check whether it is still included in the yahoo finance api")
-            return {"high": 0, "low": 0, "open": 0,"close": 0, "exchange_closed": True}
+    if ((date - stock_data.values()[0]['date']).days > 7):
+        print("High gap difference between requested and responsded date.")
+        print("Stock given by", stock)
+        print("Requested date", date)
+        print("Returned stock", stock_data.values())
 
     result["high"] = stock_data.values()[0]["h"]
     result["low"] = stock_data.values()[0]["l"]
