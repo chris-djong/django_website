@@ -1,5 +1,7 @@
 {% extends "layouts/base.html" %}
 {% load static %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
 {% block title %} History settings {% endblock %} 
 
 <!-- Specific Page CSS goes HERE  -->
@@ -49,11 +51,8 @@
             </td>
           </tr>
           <tr class='d-flex'>
-            <td class='col-6'>
-              Current buy fees:
-            </td>
-            <td class='col-6'>
-              {{ buy_fees }}
+            <td class='col-12'>
+		    Current buy fees: {{ buy_fees}}
             </td>
           </tr>
           <tr class='d-flex'>
@@ -68,11 +67,8 @@
             </td>
           </tr>
           <tr class='d-flex'>
-            <td class='col-6'>
-              Current sell fees:
-            </td>
-            <td class='col-6'>
-              {{ sell_fees }}
+            <td class='col-12'>
+		    Current sell fees: {{ sell_fees }}
             </td>
           </tr>
           <tr class='d-flex'>
@@ -133,12 +129,6 @@
       </tr>
       <tr class="d-flex">
         <td class="footer-menu-item col-2">Fees linear:</td><td class="col-10 footer-menu-item">The linear fees that you had to pay for the stock and which thus are dependant on the price. Use 0.1 for 10% for example. Note, this percentage is dependant on the currency you enter for the price_bought variable.</td>
-      </tr>
-      <tr class="d-flex">
-        <td class="footer-menu-item col-2">Lower alert:</td><td class="col-10 footer-menu-item">Receive an email in case the stock decreases beyond a certain price. Note: Check your spam folder please. The @hotmail.com domain is completely blocking our mails by its privacy settings.</td>
-      </tr>
-      <tr class="d-flex">
-        <td class="footer-menu-item col-2">Upper alert:</td><td class="col-10 footer-menu-item">Receive an email in case the stock increases beyond a certain price. Note: Check your spam folder please. The @hotmail.com domain is completely blocking our mails by its privacy settings.</td>
       </tr>
     </table>
 

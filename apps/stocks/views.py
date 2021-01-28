@@ -39,6 +39,10 @@ def transaction_overview_view(request, *args, **kwargs):
 
         # Check whether we created the portfolio already and if not create it together with the corresponding total values
         portfolio = transaction_context["portfolio"]
+        # Not sure whether this case can ever exist, just added it for safety purposes
+        if portfolio is None or portfolio == '':
+            portfolio = 'Portfolio'
+
         if portfolio not in querysets:
             querysets[portfolio] = {}
 
@@ -452,7 +456,7 @@ def transaction_settings_history_view(request, id):
         # First retrieve the corresponding settings from the database
         if request.method == "GET":
             currency = CurrencyTicker.objects.get(name='Euro')
-            settings_form = TransactionSettingsForm(initial={"stock":transaction.stock,"amount": transaction.amount, "label":transaction.label, "price_bought":transaction.price_bought, "price_bought_currency": currency, "buy_fees": transaction.buy_fees, "buy_fees_currency": currency, "sell_fees": transaction.sell_fees, "sell_fees_currency": currency, "buy_fees_constant": transaction.buy_fees_constant, "sell_fees_constant": transaction.sell_fees_constant, "buy_fees_linear": transaction.buy_fees_linear, "sell_fees_linear": transaction.sell_fees_linear, "lower_alert":transaction.lower_alert, "upper_alert":transaction.upper_alert, "date_bought": transaction.date_bought, "date_sold":transaction.date_sold, "price_sold": transaction.price_sold, "price_sold_currency": currency})
+            settings_form = TransactionSettingsForm(initial={"stock":transaction.stock, 'portfolio': transaction.portfolio, "amount": transaction.amount, "label":transaction.label, "price_bought":transaction.price_bought, "price_bought_currency": currency, "buy_fees": transaction.buy_fees, "buy_fees_currency": currency, "sell_fees": transaction.sell_fees, "sell_fees_currency": currency, "buy_fees_constant": transaction.buy_fees_constant, "sell_fees_constant": transaction.sell_fees_constant, "buy_fees_linear": transaction.buy_fees_linear, "sell_fees_linear": transaction.sell_fees_linear, "lower_alert":transaction.lower_alert, "upper_alert":transaction.upper_alert, "date_bought": transaction.date_bought, "date_sold":transaction.date_sold, "price_sold": transaction.price_sold, "price_sold_currency": currency})
         elif request.method == "POST":
             settings_form = TransactionSettingsForm(request.POST)
             if settings_form.is_valid():
@@ -480,9 +484,9 @@ def transaction_settings_history_view(request, id):
 
                 # Obtain the date sold
                 date_sold = datetime.date(int(settings_form.data['date_sold_year']), int(settings_form.data['date_sold_month']), int(settings_form.data['date_sold_day']))
-                if date.weekday() >= 5:
-                    date = get_prev_weekday(date)
-                transaction.date_sold = date
+                if date_sold.weekday() >= 5:
+                    date_sold = get_prev_weekday(date_sold)
+                transaction.date_sold = date_sold
 
                 # Then calculate the price sold from history or use the input depending on user choice
                 if settings_form.data['price_sold'] is None:
@@ -494,14 +498,18 @@ def transaction_settings_history_view(request, id):
                     transaction.price_sold = round(float(settings_form.data["price_sold"])*to_eur, 2)
 
                 # Calculate buy fees and extract to Eur
+                currency = CurrencyTicker.objects.get(id=settings_form.data["buy_fees_currency"])
+                to_eur = get_currency_history(currency, transaction.date_bought)
                 transaction.buy_fees_linear = settings_form.data["buy_fees_linear"]
-                transaction.buy_fees_constant = settings_form.data["buy_fees_constant"]
+                transaction.buy_fees_constant = round(float(settings_form.data["buy_fees_constant"])*to_eur, 2)
                 transaction.buy_fees = round(float(transaction.price_bought)*float(transaction.amount)*float(transaction.buy_fees_linear) + float(transaction.buy_fees_constant), 2)
 
                 # And the sell fees and extract to Eur
                 transaction_context = get_context(transaction)
+                currency = CurrencyTicker.objects.get(id=settings_form.data["sell_fees_currency"])
+                to_eur = get_currency_history(currency, transaction.date_sold)
                 transaction.sell_fees_linear = settings_form.data["sell_fees_linear"]
-                transaction.sell_fees_constant = settings_form.data["sell_fees_constant"]
+                transaction.sell_fees_constant = round(float(settings_form.data["sell_fees_constant"])*to_eur, 2)
                 transaction.sell_fees = round(float(transaction.sell_fees_constant) + float(transaction.sell_fees_linear)*transaction_context["amount"]*transaction_context["current_price"], 2)
 
                 # Finally save the transaction
@@ -513,7 +521,7 @@ def transaction_settings_history_view(request, id):
                 return redirect("history")
             else:
                 # Throw an error?
-                raise Http404("Transaction settings form not valid.")
+                raise Http404(settings_form.errors)
             
         context = {"form": settings_form, "sell_fees": transaction.sell_fees,"buy_fees": transaction.buy_fees}
         return render(request, "transaction_settings_history.html", context)

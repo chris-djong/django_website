@@ -28,10 +28,11 @@ INSTALLED_APPS = [
     'apps.stocks',
     'apps.mail_relay',
     'apps.newsapi',
+    'apps.analysis',
     'authentication',
     'django_celery_beat', 
     'crispy_forms',  # to obtain nice and easier to manage forms
-    'widget_tweaks',
+    'widget_tweaks',  # same 
 
     # Django defaults
     'django.contrib.admin',
