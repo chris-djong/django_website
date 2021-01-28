@@ -37,11 +37,25 @@ def transaction_overview_view(request, *args, **kwargs):
         if not transaction_context["exchange_closed"]:
             daily_from_today = True
 
-        # Check whether we created the portfolio already
+        # Check whether we created the portfolio already and if not create it together with the corresponding total values
         portfolio = transaction_context["portfolio"]
         if portfolio not in querysets:
             querysets[portfolio] = {}
-           
+
+            # And create the totals for this portfolio / space is used behind so that the user is not able to enter the same label
+            querysets[portfolio]["total_values_"] = {}
+            # Required parameters
+            querysets[portfolio]["total_values_"]['daily_change'] = 0
+            querysets[portfolio]["total_values_"]['daily_change_perc'] = 0
+            querysets[portfolio]["total_values_"]['net_total'] = 0
+            querysets[portfolio]["total_values_"]['total_profit'] = 0
+            querysets[portfolio]["total_values_"]['total_profit_perc'] = 0
+            querysets[portfolio]["total_values_"]['daily_from_today'] = False
+            # And the ones that are used so that we can calculate the total percentage later on
+            querysets[portfolio]["total_values_"]['total_yesterday'] = 0
+            querysets[portfolio]["total_values_"]['initial_total'] = 0
+
+
         # Set label to string for error handling
         if (transaction.label is None):
             transaction.label = ""
@@ -51,6 +65,25 @@ def transaction_overview_view(request, *args, **kwargs):
         # Loop through the labels
         for i in range(len(labels)):
             label = labels[i]
+            # So that the user is not able to overwrite our total_values of the portfolio
+            if label == 'total_values_':
+                label = 'total_values'  
+            
+            # Add the respective amounts to the total changes
+            price_today = transaction_context['current_price']
+            daily_change = transaction_context['daily_change']
+            price_yesterday = price_today - daily_change
+            amount = transaction_context['amount']
+            profit = transaction_context['total_profit']
+            
+            querysets[portfolio]["total_values_"]['daily_change'] += amount * daily_change
+            querysets[portfolio]["total_values_"]['total_yesterday'] += amount * price_yesterday  # to calculate total daily change perc at the end of the loop
+            querysets[portfolio]["total_values_"]['net_total'] += transaction_context['current_total_net']
+            querysets[portfolio]["total_values_"]['total_profit'] += profit
+            querysets[portfolio]["total_values_"]['initial_total'] += amount*transaction_context['initial_price'] + transaction_context['buy_fees'] + transaction_context['sell_fees']  # and to calculate the total profit perc
+            if not transaction_context["exchange_closed"]:
+                querysets[portfolio]["total_values_"]['daily_from_today'] = True
+
             # We only add the first label to the queryset for generation of the overview
             if i == 0:
                 if label in querysets[portfolio]:
@@ -64,13 +97,20 @@ def transaction_overview_view(request, *args, **kwargs):
                 else:
                     diversification_chart_dict[label] = transaction_context["amount"]*transaction_context["current_price"] 
     
+    # Calculate portfolio percentages and remove temporary keys
+    for portfolio in querysets.keys():
+        querysets[portfolio]['total_values_']['daily_change_perc'] = round(querysets[portfolio]["total_values_"]['daily_change']/querysets[portfolio]["total_values_"]['total_yesterday'], 2) if querysets[portfolio]["total_values_"]['total_yesterday'] else 0
+        querysets[portfolio]["total_values_"]['total_profit_perc'] = round(querysets[portfolio]["total_values_"]['total_profit']/querysets[portfolio]["total_values_"]['initial_total'], 2) if querysets[portfolio]["total_values_"]['initial_total'] else 0
+        querysets[portfolio]["total_values_"].pop('initial_total')
+        querysets[portfolio]["total_values_"].pop('total_yesterday')
+
     # First add the general Portfolio queryset for new users or in case no portfolio is present
     if not querysets.keys():
-        querysets["Portfolio"] = {} 
+        querysets["Portfolio"] = {"total_values_": {'daily_change': 0, 'daily_change_perc': 0, 'net_total': 0, 'total_profit': 0, 'total_profit_perc': 0}} 
 
     # Add watching queryset by default in case it is not there yet
     if "Watchlist" not in querysets.keys():
-        querysets["Watchlist"] = {}
+        querysets["Watchlist"] = {"total_values_": {'daily_change': 0, 'daily_change_perc': 0, 'net_total': 0, 'total_profit': 0, 'total_profit_perc': 0}} 
 
     # Now convert the diversification_chart_dict to values comprehended by chart.js
     diversification_chart_labels = list(diversification_chart_dict.keys())
@@ -81,7 +121,6 @@ def transaction_overview_view(request, *args, **kwargs):
     user_portfolio_history = user_portfolio_history.order_by('-date')   # this means idx 0 is the newest value and index -1 the oldest
 
     # Create plotting data
-    print("This is printed by overview view so that portfolio plot loop can be removed")
     portfolio_plot = pd.DataFrame.from_records(user_portfolio_history.values('date', 'price', 'profit'))
     portfolio_plot_labels = pd.to_datetime(portfolio_plot['date']).dt.strftime("%Y-%m-%d").to_list()
     portfolio_plot_data = portfolio_plot['price'].to_list()
@@ -103,17 +142,13 @@ def transaction_overview_view(request, *args, **kwargs):
         current_total_stocks = round(user_portfolio_history[0].price, 2)
         current_total_profit = round(user_portfolio_history[0].profit, 2)
         current_total_net = round(user_portfolio_history[0].net, 2)
+        current_total_profit_perc = round(current_total_profit/initial_total_stocks*100, 2)
     else:
         initial_total_stocks = 0
         current_total_stocks = 0
         current_total_profit = 0
         current_total_net = 0
-
-    # And calculate the percentage
-    if initial_total_stocks == 0:
         current_total_profit_perc = 0
-    else:
-        current_total_profit_perc = round(current_total_profit/initial_total_stocks*100, 2)
 
     # Add all the required variables to the context for processing by the template
     my_context = {"daily_change": daily_change, "daily_change_perc": daily_change_perc, "querysets": querysets, "portfolio_plot_labels": portfolio_plot_labels, "portfolio_plot_data": portfolio_plot_data, "portfolio_plot_profit": portfolio_plot_profit, "current_total_net": current_total_net, "initial_total_stocks": initial_total_stocks, "current_total": current_total_stocks,"current_total_profit":current_total_profit, "current_total_profit_perc":current_total_profit_perc, "diversification_chart_labels": diversification_chart_labels, "diversification_chart_values":diversification_chart_values, "diversification_chart_colors": diversification_chart_colors, "daily_from_today": daily_from_today}
