@@ -101,7 +101,7 @@ def download_stock_date(stock, date):
 # Obtain portfolio from database for a given user not the sold ones and combine them immediately in case there are more
 def get_portfolio(username, combine=True):
     user = User.objects.get(username=username)
-    portfolio = Transaction.objects.filter(user=user, date_sold=None).order_by('label')
+    portfolio = Transaction.objects.filter(user=user, date_sold=None).order_by('portfolio', 'label')
     # In case we want to combine stocks, meaning multiple transactions of same stock are merged into one
     if combine:
         # First we have to obtain all the stock name excluding the Watching list, meaning amount of 0
