@@ -7,6 +7,7 @@ from core.celery import app
 import numpy as np
 
 # Functions that sends alert for either upper or lower alert
+@app.task
 def send_alert_mail(user_mail, transaction, price_today, alert_value):
     # First deduce whether we have an upper or a lower alert
     if price_today >= alert_value:

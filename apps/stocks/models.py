@@ -26,6 +26,7 @@ class Stock(models.Model):
     ticker = models.CharField(max_length=50, unique=True)
     article_ticker = models.CharField(max_length=50, null=True, blank=True)
     plot_ticker = models.CharField(max_length=50, null=True, blank=True)
+    iexfinance_ticker = models.CharField(max_length=50, null=True, blank=True)
     name = models.CharField(max_length=200, null=True, blank=True)
     currency = models.ForeignKey(CurrencyTicker, on_delete=models.CASCADE)
 

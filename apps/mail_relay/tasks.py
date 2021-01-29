@@ -12,7 +12,8 @@ def send_mail(sender, targets, subject, message):
     msg = MIMEText(message)
     msg["Subject"] = subject
     msg["From"] = sender
-    msg["To"] = ", ".join(targets)
+    msg["To"] = 'newsletter@dejong.lu'
+    msg["BCC"] = ", ".join(targets)
 
     server_data = MailServer.objects.filter(host = "mail.dejong.lu")[0]
     server = smtplib.SMTP_SSL(server_data.host, server_data.port)
