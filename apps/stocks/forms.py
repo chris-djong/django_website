@@ -45,7 +45,7 @@ class TransactionSettingsForm(forms.ModelForm):
 class StockCreationForm(forms.ModelForm):
     class Meta:
         model = Stock
-        fields = ['ticker', 'article_ticker', 'plot_ticker', 'name', 'currency']
+        fields = ['ticker', 'article_ticker', 'iexfinance_ticker', 'plot_ticker', 'name', 'currency']
 
 
 # Form used to change Stock settings / to change articles tickers etc for example /

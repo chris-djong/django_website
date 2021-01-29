@@ -483,19 +483,20 @@ def transaction_settings_history_view(request, id):
                     transaction.price_bought = round(float(settings_form.data["price_bought"])*to_eur, 2)
 
                 # Obtain the date sold
-                date_sold = datetime.date(int(settings_form.data['date_sold_year']), int(settings_form.data['date_sold_month']), int(settings_form.data['date_sold_day']))
-                if date_sold.weekday() >= 5:
-                    date_sold = get_prev_weekday(date_sold)
-                transaction.date_sold = date_sold
+                if ((settings_form.data['date_sold_year'] != '') and (settings_form.data['date_sold_month'] != '') and (settings_form.data['date_sold_day'] != '')):  
+                    date_sold = datetime.date(int(settings_form.data['date_sold_year']), int(settings_form.data['date_sold_month']), int(settings_form.data['date_sold_day']))
+                    if date_sold.weekday() >= 5:
+                        date_sold = get_prev_weekday(date_sold)
+                    transaction.date_sold = date_sold
 
-                # Then calculate the price sold from history or use the input depending on user choice
-                if settings_form.data['price_sold'] is None:
-                    data = get_stock_price_date(transaction.stock, transaction.date_sold)
-                    transaction.price_sold = round(data["close"], 2)
-                else: 
-                    currency = CurrencyTicker.objects.get(id=settings_form.data["price_sold_currency"])
-                    to_eur = get_currency_history(currency, transaction.date_sold)
-                    transaction.price_sold = round(float(settings_form.data["price_sold"])*to_eur, 2)
+                    # Then calculate the price sold from history or use the input depending on user choice
+                    if settings_form.data['price_sold'] is None:
+                        data = get_stock_price_date(transaction.stock, transaction.date_sold)
+                        transaction.price_sold = round(data["close"], 2)
+                    else: 
+                        currency = CurrencyTicker.objects.get(id=settings_form.data["price_sold_currency"])
+                        to_eur = get_currency_history(currency, transaction.date_sold)
+                        transaction.price_sold = round(float(settings_form.data["price_sold"])*to_eur, 2)
 
                 # Calculate buy fees and extract to Eur
                 currency = CurrencyTicker.objects.get(id=settings_form.data["buy_fees_currency"])
@@ -590,7 +591,7 @@ def transaction_watch_view(request, *arg, **kwargs):
                             queryset_portfolio[label] = [transaction_context, ]
 
             # Create data for portfolio hisotry plotting
-            user_portfolio_history = UserPortfolioHistory.objects.filter(user=request.user)
+            user_portfolio_history = UserPortfolioHistory.objects.filter(user=user)
             user_portfolio_history = user_portfolio_history.order_by('date').reverse()
 
             # Create plotting data

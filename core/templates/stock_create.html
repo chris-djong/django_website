@@ -29,6 +29,11 @@
           </tr>
           <tr class="d-flex">
             <td class="col-12">
+              {{ form.iexfinance_ticker | as_crispy_field }} 
+            </td>
+          </tr>
+          <tr class="d-flex">
+            <td class="col-12">
               {{ form.article_ticker | as_crispy_field }} 
             </td>
           </tr>
@@ -62,10 +67,16 @@
 {% block information %}
     <table>
       <tr class="d-flex">
+        <td class="footer-menu-item col-2">NOTE:</td><td class="footer-menu-item col-10">In case you are unsure, just use the same one everywhere. I will get notified once a wrong symbol has been requested too many times. (or notify me directly finance@dejong.lu).</td>
+      </tr>
+      <tr class="d-flex">
         <td class="footer-menu-item col-2">Name:</td><td class="footer-menu-item col-10">This name is used throughout the website. Example: Royal Dutch Shell PLC.</td>
       </tr>
       <tr class="d-flex">
         <td class="footer-menu-item col-2">Ticker:</td><td class="footer-menu-item col-10">The Ticker from <a href="https://finance.yahoo.com" target="_blank">finance.yahoo.com</a>. Generally given behind the name in (). Example: RDSA.AS</td>
+      </tr>
+      <tr class="d-flex">
+        <td class="footer-menu-item col-2">Iexfinance ticker:</td><td class="footer-menu-item col-10">The Ticker from <a href="https://iextrading.com/trading/eligible-symbols/" target="_blank">https://iextrading.com/trading/eligible-symbols/</a>.RDS.A</td>
       </tr>
       <tr class="d-flex">
         <td class="footer-menu-item col-2">Article ticker:</td><td class="footer-menu-item col-10">The Ticker that is used to generate news from <a class="white" href="https://stocknewsapi.com" target="_blank">stocknewsapi.com</a>. Just use the test environment on their website to see what works. Example: RSA-A. </td>
