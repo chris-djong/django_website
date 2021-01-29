@@ -14,6 +14,6 @@ def download_balance_sheet(iex_tickers):
 
 
 def download_stock_analysis():
-    iexfinance_tickers = list(Stock.objects.all().values_list('iexfinance_ticker', flat=True))
+    iexfinance_tickers = list(Stock.objects.all().exclude(iexfinance_ticker__isnull=True)values_list('iexfinance_ticker', flat=True))
     download_balance_sheet(iexfinance_tickers)
 

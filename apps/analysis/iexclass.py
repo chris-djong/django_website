@@ -43,7 +43,7 @@ class IexFinanceApi():
         os.environ['IEX_API_VERSION'] = 'iexcloud-sandbox'
         self.IexApiObject = IexApiKey.objects.filter(sandbox=True)[0]
         self.sandbox = True 
-    
+
     # Unset the environment variable and get the main key
     def unset_sandbox(self):
         os.environ.pop('IEX_API_VERSION', None)
@@ -145,7 +145,7 @@ class IexFinanceApi():
             current_tickers = self.tickers[i:i+100]
             stocks = iexfinance.stocks.Stock(current_tickers)
             today = datetime.date.today()
-            balance_sheets = self.stocks.get_balance_sheet()
+            balance_sheets = self.stocks.get_balance_sheet(token=self.IexApiObject.token)
             for ticker, result in balance_sheets.items():
                 for _, data in result.iterrows():
                     stock = Stock.objects.filter(iexfinance_ticker=ticker)
