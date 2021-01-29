@@ -11,7 +11,7 @@ class IexFinanceApi():
         # By default set everything to the sandbox environment so that no messages are used by accident
         self.set_sandbox()
         self.verifiy_account_information()
-        self.stocks = iexfinance.stocks.Stock(tickers)
+        self.tickers = tickers
 
     # Obtain the metadata and store it in the class so that we are able to see how many messages we have left
     # In case certain thresholds are reached we send email alerts
@@ -140,41 +140,45 @@ class IexFinanceApi():
     '''
 
     def query_balance_sheet(self):
-        today = datetime.date.today()
-        balance_sheets = self.stocks.get_balance_sheet()
-        for ticker, result in balance_sheets.items():
-            for _, data in result.iterrows():
-                stock = Stock.objects.filter(iexfinance_ticker=ticker)
-                balance_sheet = BalanceSheet.objects.create(stock = stock, 
-                    date = today, 
-                    avg10Volume = data['avg10Volume'], 
-                    avg30Volume = data['avg30Volume'], 
-                    day200MovingAvg = data['day200MovingAvg'], 
-                    day30ChangePercent = data['day30ChangePercent'], 
-                    day50MovingAvg = data['day50MovingAvg'],
-                    day5ChangePercent = data['day5ChangePercent'],
-                    dividendYield = data['dividendYield'],
-                    employees = data['employees'],
-                    exDividendDate = data['exDividendDate'],
-                    marketcap = data['marketcap'],
-                    maxChangePercent = data['maxChangePercent'],
-                    month1ChangePercent = data['month1ChangePercent'],
-                    month3ChangePercent = data['month3ChangePercent'],
-                    month6ChangePercent = data['month6ChangePercent'],
-                    nextDividendDate = data['nextDividendDate'],
-                    nextEarningsDate = data['nextEarningsDate'],
-                    peRatio = data['peRatio'],
-                    sharesOutstanding = data['sharesOutstanding'],
-                    ttmDividendRate = data['ttmDividendRate'],
-                    ttmEPS = data['ttmEPS'],
-                    week52change = data['week52change'],
-                    week52high = data['week52high'],
-                    week52low = data['week52low'],
-                    year1ChangePercent = data['year1ChangePercent'],
-                    year2ChangePercent = data['year2ChangePercent'],
-                    year5ChangePercent = data['year5ChangePercent'],
-                    ytdChangePercent = data['ytdChangePercent'],
-                )
+        # Api only allows to call for 100 tickers at a time so split the call evenly
+        for i in range(0, len(self.tickers), 100):
+            current_tickers = self.tickers[i:i+100]
+            stocks = iexfinance.stocks.Stock(current_tickers)
+            today = datetime.date.today()
+            balance_sheets = self.stocks.get_balance_sheet()
+            for ticker, result in balance_sheets.items():
+                for _, data in result.iterrows():
+                    stock = Stock.objects.filter(iexfinance_ticker=ticker)
+                    balance_sheet = BalanceSheet.objects.create(stock = stock, 
+                        date = today, 
+                        avg10Volume = data['avg10Volume'], 
+                        avg30Volume = data['avg30Volume'], 
+                        day200MovingAvg = data['day200MovingAvg'], 
+                        day30ChangePercent = data['day30ChangePercent'], 
+                        day50MovingAvg = data['day50MovingAvg'],
+                        day5ChangePercent = data['day5ChangePercent'],
+                        dividendYield = data['dividendYield'],
+                        employees = data['employees'],
+                        exDividendDate = data['exDividendDate'],
+                        marketcap = data['marketcap'],
+                        maxChangePercent = data['maxChangePercent'],
+                        month1ChangePercent = data['month1ChangePercent'],
+                        month3ChangePercent = data['month3ChangePercent'],
+                        month6ChangePercent = data['month6ChangePercent'],
+                        nextDividendDate = data['nextDividendDate'],
+                        nextEarningsDate = data['nextEarningsDate'],
+                        peRatio = data['peRatio'],
+                        sharesOutstanding = data['sharesOutstanding'],
+                        ttmDividendRate = data['ttmDividendRate'],
+                        ttmEPS = data['ttmEPS'],
+                        week52change = data['week52change'],
+                        week52high = data['week52high'],
+                        week52low = data['week52low'],
+                        year1ChangePercent = data['year1ChangePercent'],
+                        year2ChangePercent = data['year2ChangePercent'],
+                        year5ChangePercent = data['year5ChangePercent'],
+                        ytdChangePercent = data['ytdChangePercent'],
+                    )
 
     '''
     cost: 1000 per symbol

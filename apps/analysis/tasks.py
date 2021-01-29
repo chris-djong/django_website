@@ -11,7 +11,9 @@ def download_balance_sheet(iex_tickers):
 
 # Celery task that is executed monthly in order to download the stock data
 @app.task
+
+
 def download_stock_analysis():
-    iexfinance_tickers = list(Stock.objects.all().values_list('iexfinance_ticker'))
+    iexfinance_tickers = list(Stock.objects.all().values_list('iexfinance_ticker', flat=True))
     download_balance_sheet(iexfinance_tickers)
 
