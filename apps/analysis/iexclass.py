@@ -1,6 +1,7 @@
 from .models import IexApiKey, BalanceSheet
+import os
 from ..stocks.models import Stock
-from .mail_relay import send_mail
+from ..mail_relay.tasks import send_mail
 import iexfinance.account  # somehow these have to be imported like this and can not be imported globally?? 
 import iexfinance.stocks
 
@@ -16,18 +17,18 @@ class IexFinanceApi():
     # In case certain thresholds are reached we send email alerts
     def verifiy_account_information(self):
         meta_data = iexfinance.account.get_metadata(token=self.IexApiObject.token)
-        messages_used = meta_data['messagesUsed']
-        messages_limit = meta_data['messageLimit']
+        messages_used = meta_data.loc['messagesUsed'][0]
+        messages_limit = meta_data.loc['messageLimit'][0]
         messages_available = messages_limit - messages_used
 
         # See whether we have exceeded on of the notification thresholds
-        old_threshold = (message_limit - self.IexApiObject.messages_available)/messages_limit*100 if message_limit else 0
-        new_threshold = (message_limit - messages_available)/messages_limit*100 if messages_limit else 0
+        old_threshold = (messages_limit - self.IexApiObject.messages_available)/messages_limit*100 if messages_limit else 0
+        new_threshold = (messages_limit - messages_available)/messages_limit*100 if messages_limit else 0
         notification_thresholds = [25, 50, 75, 80, 85, 90, 95]
 
         for threshold in notification_thresholds:
             # In case we have exceeded the threshold send the mail and update the threshold variable
-            if ((old_threshold < thresholds) and (new_threshold >= threshold)):
+            if ((old_threshold < threshold) and (new_threshold >= threshold)):
                 targets = ['thresholding@dejong.lu']
                 sender = "finance@dejong.lu"
                 subject = 'API %f\% threshold exceeded' % (threshold)
@@ -206,7 +207,7 @@ class IexFinanceApi():
         return None
 
 
- '''
+    '''
     costOfRevenue               40939513908   Represents the cost of goods sold for the period including depletion and amortization. https://www.investopedia.com/terms/c/cost-of-revenue.asp
     currency                            USD   Currency code for reported financials.
     ebit                        15086191458
