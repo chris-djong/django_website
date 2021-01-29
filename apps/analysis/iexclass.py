@@ -21,8 +21,8 @@ class IexFinanceApi():
         messages_available = messages_limit - messages_used
 
         # See whether we have exceeded on of the notification thresholds
-        old_threshold = self.IexApiObject.messages_available/messages_limit*100 
-        new_threshold = messages_available/messages_limit*100
+        old_threshold = (message_limit - self.IexApiObject.messages_available)/messages_limit*100 if message_limit else 0
+        new_threshold = (message_limit - messages_available)/messages_limit*100 if messages_limit else 0
         notification_thresholds = [25, 50, 75, 80, 85, 90, 95]
 
         for threshold in notification_thresholds:
