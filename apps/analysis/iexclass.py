@@ -1,5 +1,6 @@
 from .models import IexApiKey, BalanceSheet
 import os
+import datetime
 from ..stocks.models import Stock
 from ..mail_relay.tasks import send_mail
 import iexfinance.account  # somehow these have to be imported like this and can not be imported globally?? 
@@ -27,7 +28,7 @@ class IexFinanceApi():
         notification_thresholds = [25, 50, 75, 80, 85, 90, 95]
 
         for threshold in notification_thresholds:
-            # In case we have exceeded the threshold send the mail and update the threshold variable
+            # In case we have exceeded the threshold send the mail
             if ((old_threshold < threshold) and (new_threshold >= threshold)):
                 targets = ['thresholding@dejong.lu']
                 sender = "finance@dejong.lu"
@@ -35,8 +36,9 @@ class IexFinanceApi():
                 message = 'Hello,\nThe API has exceeded the %f\%t threshold in the sandbox=%s environment.\n Please verifiy calls should be limited.\nKind regards,\nChris.' % (threshold, self.sandbox) 
                 send_mail.delay(sender, targets, subject, message)
 
-                self.IexApiObject.messages_available = messages_available
-                self.IexApiObject.save()
+        # Update the new amount of messages available
+        self.IexApiObject.messages_available = messages_available
+        self.IexApiObject.save()
 
     # Set the sandbox environment, meaning we have to set the environment variable and download the new key
     def set_sandbox(self):
@@ -143,12 +145,13 @@ class IexFinanceApi():
         # Api only allows to call for 100 tickers at a time so split the call evenly
         for i in range(0, len(self.tickers), 100):
             current_tickers = self.tickers[i:i+100]
-            stocks = iexfinance.stocks.Stock(current_tickers)
             today = datetime.date.today()
-            balance_sheets = self.stocks.get_balance_sheet(token=self.IexApiObject.token)
+            stocks = iexfinance.stocks.Stock(current_tickers, token=self.IexApiObject.token)
+            balance_sheets = stocks.get_balance_sheet(token=self.IexApiObject.token)
             for ticker, result in balance_sheets.items():
                 for _, data in result.iterrows():
                     stock = Stock.objects.filter(iexfinance_ticker=ticker)
+                    print(data)
                     balance_sheet = BalanceSheet.objects.create(stock = stock, 
                         date = today, 
                         avg10Volume = data['avg10Volume'], 
