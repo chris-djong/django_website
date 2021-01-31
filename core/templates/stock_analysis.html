@@ -23,15 +23,217 @@
               <input type="submit" value="Submit"/>
             </td>
           </tr>
+          {% if form.errors %}
           <tr class='d-flex'>
             <td class=col-12>
               {{ form.errors }}
             </td>
           </tr>
+          {% endif %}
         </table>
       </form>
     </div>
   </div>
+</tr>
+
+<!-- Show Balance Sheet Data-->
+<tr class='d-flex'>
+  <div class="card text-white">
+    <div class='card-header'>
+      <h1>
+        Balance Sheet
+      </h1>
+    </div>
+    <div class='card-body'>
+      <table class='table' style='white-space: nowrap;'>
+        <tr>
+          <td class='col-6'>
+            Date reported:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.date_reported }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Fiscal quarter:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.fiscalQuarter }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Fiscal year:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.fiscalYear }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Current Cash
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.currentCash }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Receivables:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.receivables }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Inventory:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.inventory }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Other current assets:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.otherCurrentAssets }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Current assets:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.current_assets }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Long term investments:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.longTermInvestments }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Property, plant and equipment:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.propertyPlantEquipment }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Goodwill:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.goodwill }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Intangible assets:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.intangibleAssets }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Other assets:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.otherAssets }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Total assets:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.totalAssets }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Payable accounts:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.accountsPayable }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Current total liabilities:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.totalCurrentLiabilities	 }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Long term debt:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.longTermDebt }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Minority interest:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.minorityInterest }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Total liabilities:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.totalLiabilities }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Shares outstanding:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.commonStock }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Retained earnings:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.retainedEarnings }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Treasury stocks:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.treasuryStock }}  
+          </td>
+        </tr>
+        <tr>
+          <td class='col-6'>
+            Shareholder equity:
+          </td>
+          <td class='col-6'>
+            {{ balance_sheet.shareholderEquity }}  
+          </td>
+        </tr>      
+      </table>
+    </div>
+  </div>
+
 </tr>
 
 {% endblock content %}
