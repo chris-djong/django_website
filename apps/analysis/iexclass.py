@@ -1,6 +1,5 @@
 from .models import IexApiKey, BalanceSheet
 import os
-import datetime
 from ..stocks.models import Stock
 from ..mail_relay.tasks import send_mail
 import iexfinance.account  # somehow these have to be imported like this and can not be imported globally?? 
@@ -28,7 +27,7 @@ class IexFinanceApi():
         notification_thresholds = [25, 50, 75, 80, 85, 90, 95]
 
         for threshold in notification_thresholds:
-            # In case we have exceeded the threshold send the mail
+            # In case we have exceeded the threshold send the mail and update the threshold variable
             if ((old_threshold < threshold) and (new_threshold >= threshold)):
                 targets = ['thresholding@dejong.lu']
                 sender = "finance@dejong.lu"
@@ -36,9 +35,8 @@ class IexFinanceApi():
                 message = 'Hello,\nThe API has exceeded the %f\%t threshold in the sandbox=%s environment.\n Please verifiy calls should be limited.\nKind regards,\nChris.' % (threshold, self.sandbox) 
                 send_mail.delay(sender, targets, subject, message)
 
-        # Update the new amount of messages available
-        self.IexApiObject.messages_available = messages_available
-        self.IexApiObject.save()
+                self.IexApiObject.messages_available = messages_available
+                self.IexApiObject.save()
 
     # Set the sandbox environment, meaning we have to set the environment variable and download the new key
     def set_sandbox(self):
@@ -145,42 +143,38 @@ class IexFinanceApi():
         # Api only allows to call for 100 tickers at a time so split the call evenly
         for i in range(0, len(self.tickers), 100):
             current_tickers = self.tickers[i:i+100]
+            stocks = iexfinance.stocks.Stock(current_tickers)
             today = datetime.date.today()
-            stocks = iexfinance.stocks.Stock(current_tickers, token=self.IexApiObject.token)
-            balance_sheets = stocks.get_balance_sheet(token=self.IexApiObject.token)
+            balance_sheets = self.stocks.get_balance_sheet(token=self.IexApiObject.token)
             for ticker, result in balance_sheets.items():
                 for _, data in result.iterrows():
                     stock = Stock.objects.filter(iexfinance_ticker=ticker)
-                    print(data)
                     balance_sheet = BalanceSheet.objects.create(stock = stock, 
-                        date = today, 
-                        avg10Volume = data['avg10Volume'], 
-                        avg30Volume = data['avg30Volume'], 
-                        day200MovingAvg = data['day200MovingAvg'], 
-                        day30ChangePercent = data['day30ChangePercent'], 
-                        day50MovingAvg = data['day50MovingAvg'],
-                        day5ChangePercent = data['day5ChangePercent'],
-                        dividendYield = data['dividendYield'],
-                        employees = data['employees'],
-                        exDividendDate = data['exDividendDate'],
-                        marketcap = data['marketcap'],
-                        maxChangePercent = data['maxChangePercent'],
-                        month1ChangePercent = data['month1ChangePercent'],
-                        month3ChangePercent = data['month3ChangePercent'],
-                        month6ChangePercent = data['month6ChangePercent'],
-                        nextDividendDate = data['nextDividendDate'],
-                        nextEarningsDate = data['nextEarningsDate'],
-                        peRatio = data['peRatio'],
-                        sharesOutstanding = data['sharesOutstanding'],
-                        ttmDividendRate = data['ttmDividendRate'],
-                        ttmEPS = data['ttmEPS'],
-                        week52change = data['week52change'],
-                        week52high = data['week52high'],
-                        week52low = data['week52low'],
-                        year1ChangePercent = data['year1ChangePercent'],
-                        year2ChangePercent = data['year2ChangePercent'],
-                        year5ChangePercent = data['year5ChangePercent'],
-                        ytdChangePercent = data['ytdChangePercent'],
+                        date = today,
+                        commonStock = data['commonStock'],
+                        currentAssets = data['currentAssets'],
+                        currentCash = data['currentCash'],
+                        fiscalDate = data['fiscalDate'],
+                        fiscalQuarter = data['fiscalQuarter'],
+                        fiscalYear = data['fiscalYear'],
+                        goodwill = data['goodwill'],
+                        intangibleAssets = data['intangibleAssets'],
+                        inventory = data['inventory'],               
+                        longTermDebt = data['longTermDebt'],           
+                        longTermInvestments = data['longTermInvestments'],      
+                        minorityInterest = data['minorityInterest'],            
+                        netTangibleAssets = data['netTangibleAssets'],           
+                        otherAssets = data['otherAssets'],                
+                        otherCurrentAssets = data['otherCurrentAssets'],         
+                        propertyPlantEquipment = data['propertyPlantEquipment'], 
+                        receivables = data['receivables'],         
+                        reportDate = data['reportDate'],            
+                        retainedEarnings = data['retainedEarnings'],     
+                        shareholderEquity = data['shareholderEquity'],      
+                        totalAssets = data['totalAssets'],           
+                        totalCurrentLiabilities = data['totalCurrentLiabilities'],
+                        totalLiabilities = data['totalLiabilities'],      
+                        treasuryStock = data['treasuryStock']
                     )
 
     '''

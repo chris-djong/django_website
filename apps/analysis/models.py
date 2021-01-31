@@ -7,8 +7,8 @@ class IexApiKey(models.Model):
     token = models.CharField(max_length=50)
     messages_available = models.IntegerField()
 
-# Create model to store the balance sheet information
-class BalanceSheet(models.Model):
+# Create model to store the KeyStats information
+class KeyStats(models.Model):
     stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
     date = models.DateField()
     avg10Volume = models.IntegerField() 
@@ -41,5 +41,34 @@ class BalanceSheet(models.Model):
 
     def __str__(self):
       return '%s-%s' % (self.stock, self.date)
+
+# Create model to store the BalanceSheet information
+class BalanceSheet(models.Model):
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    date = models.DateField()
+    commonStock = models.IntegerField() 
+    currentAssets = models.FloatField()
+    currentCash = models.FloatField()
+    fiscalDate = models.DateField()
+    fiscalQuarter = models.IntegerField()
+    fiscalYear = models.IntegerField()
+    goodwill = models.FloatField()
+    intangibleAssets = models.FloatField()
+    inventory = models.FloatField()                     
+    longTermDebt = models.FloatField()                
+    longTermInvestments = models.FloatField()         
+    minorityInterest = models.FloatField()            
+    netTangibleAssets = models.FloatField()           
+    otherAssets = models.FloatField()                 
+    otherCurrentAssets = models.FloatField()          
+    propertyPlantEquipment = models.FloatField() 
+    receivables = models.FloatField()            
+    reportDate = models.FloatField()             
+    retainedEarnings = models.FloatField()       
+    shareholderEquity = models.FloatField()      
+    totalAssets = models.FloatField()            
+    totalCurrentLiabilities = models.FloatField()
+    totalLiabilities = models.FloatField()       
+    treasuryStock = models.FloatField()          
 
       
