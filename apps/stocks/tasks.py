@@ -178,6 +178,7 @@ def download_stocks_since(day, month, year, stocks):
         difference_days = (today - day_iterator).days
 
         while (difference_days >= 0):
+            print('%i Days remaining' % difference_days)
             # Download the stock data for that day
             download_stocks_date(stocks, day_iterator)
 

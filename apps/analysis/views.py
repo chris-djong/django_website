@@ -2,7 +2,7 @@ import datetime
 import os
 from .forms import StockForm
 from .models import BalanceSheet, KeyStats, CashFlow, IncomeStatement
-from ..stocks.models import Transaction
+from ..stocks.models import Transaction, Stock
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -11,7 +11,8 @@ from django.contrib.auth.models import User
 @login_required(login_url="login")
 def stock_analysis_view(request, *args, **kwargs):
     # Obtain user object to filter stock
-    stocks = Transaction.objects.filter(user=request.user).distinct()
+    required_stocks = Transaction.objects.filter(user=request.user, date_sold=None).values('stock').distinct()
+    stocks = Stock.objects.filter(id__in=required_stocks)
 
     # Show stock form in the beginning
     stock_form = StockForm(stocks)

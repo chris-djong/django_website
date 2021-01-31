@@ -60,29 +60,30 @@ def download_stock_date(stock, date):
 
         # First delete all the current values in case there are any, so that we get rid of duplicates
         stocks = StockPriceHistory.objects.filter(date=date, ticker=stock)
-        stocks.delete()
+        today = datetime.date.today()
 
-        # Then obtain the current Currency/EUR price
-        to_eur = get_currency_history(stock.currency, date)
+        if ((stocks.count() == 0) or ((today - date).days > 7)):
+            # Then obtain the current Currency/EUR price
+            to_eur = get_currency_history(stock.currency, date)
 
-        # High low open close
-        h = round(data["High"]*to_eur, 2)
-        l = round(data["Low"]*to_eur, 2)
-        o = round(data["Open"]*to_eur, 2)
-        c = round(data["Close"]*to_eur, 2)
-        v = round(data["Volume"], 2)
+            # High low open close
+            h = round(data["High"]*to_eur, 2)
+            l = round(data["Low"]*to_eur, 2)
+            o = round(data["Open"]*to_eur, 2)
+            c = round(data["Close"]*to_eur, 2)
+            v = round(data["Volume"], 2)
 
-        # And finally save the history
-        # Only if all the prices are above 0 (somehow the api return negative prices at a given moment)
-        # We have to use stock_id here because we renamed ticker to stock, django can not handle that apparently
-        if h>=0 and l >= 0 and c >= 0 and o >= 0 and v >= 0:
-            # Then save the new entry
-            stock_history = StockPriceHistory.objects.create(ticker=stock, date=date, h=h, l=l, o=o, c=c, v=v)
-            stock_history.save()
-        else:
-            print("Error in stock.tasks.download_stocks_date")
-            print("Negative price obtained for", stock, date)
-            print("Not saving data")
+            # And finally save the history
+            # Only if all the prices are above 0 (somehow the api return negative prices at a given moment)
+            # We have to use stock_id here because we renamed ticker to stock, django can not handle that apparently
+            if h>=0 and l >= 0 and c >= 0 and o >= 0 and v >= 0:
+                # Then save the new entry
+                stock_history = StockPriceHistory.objects.create(ticker=stock, date=date, h=h, l=l, o=o, c=c, v=v)
+                stock_history.save()
+            else:
+                print("Error in stock.tasks.download_stocks_date")
+                print("Negative price obtained for", stock, date)
+                print("Not saving data")
     # Error handling for different errors 
     except (RemoteDataError):
         print(sys.exc_info()[0])
