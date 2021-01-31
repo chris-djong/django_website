@@ -7,7 +7,7 @@ from .iexclass import IexFinanceApi
 @app.task
 def download_balance_sheet(iex_tickers):
     iex_finance_api = IexFinanceApi(iex_tickers)
-    iex_finance_api.query_balance_sheet() 
+    iex_finance_api.query_balance_sheet()
 
 # Celery task that is executed monthly in order to download the stock data
 @app.task
