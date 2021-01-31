@@ -9,17 +9,17 @@ def download_balance_sheet(iex_tickers):
     iex_finance_api.query_balance_sheet()
 
 @app.task
-def download_key_stats(iex_tickers)
+def download_key_stats(iex_tickers):
     iex_finance_api = IexFinanceApi(iex_tickers)
     iex_finance_api.query_key_stats()
 
 @app.task
-def download_cash_flow(iex_tickers)
+def download_cash_flow(iex_tickers):
     iex_finance_api = IexFinanceApi(iex_tickers)
     iex_finance_api.query_cash_flow()
 
 @app.task
-def download_income_statement(iex_tickers)
+def download_income_statement(iex_tickers):
     iex_finance_api = IexFinanceApi(iex_tickers)
     iex_finance_api.query_income_statement()   
 
@@ -27,13 +27,9 @@ def download_income_statement(iex_tickers)
 @app.task
 def download_stock_analysis():
     iexfinance_tickers = list(Stock.objects.all().exclude(iexfinance_ticker__isnull=True).values_list('iexfinance_ticker', flat=True))
-    print('Downloading all balance sheets..')
     download_balance_sheet(iexfinance_tickers)
-    print('Downloading all key stats..')
     download_key_stats(iexfinance_tickers)
-    print('Downloading all cash flows..')
     download_cash_flow(iexfinance_tickers)
-    print('Downloading all income statements..')
     download_income_statement(iexfinance_tickers)
 
 

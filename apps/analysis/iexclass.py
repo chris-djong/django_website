@@ -1,16 +1,18 @@
 from .models import IexApiKey, KeyStats, BalanceSheet, CashFlow, IncomeStatement
 import os
+import sys
 import datetime
 from ..stocks.models import Stock
 from ..mail_relay.tasks import send_mail
 import iexfinance.account  # somehow these have to be imported like this and can not be imported globally?? 
 import iexfinance.stocks
+import math
 
 # Either obtain the sandbox api key or not 
 class IexFinanceApi():
     def __init__(self, tickers):
         # By default set everything to the sandbox environment so that no messages are used by accident
-        self.set_sandbox()
+        self.unset_sandbox()
         self.verifiy_account_information()
         self.tickers = tickers
 
@@ -93,14 +95,21 @@ class IexFinanceApi():
             stocks = iexfinance.stocks.Stock(current_tickers, token=self.IexApiObject.token)
             today = datetime.date.today()
             key_stats = stocks.get_key_stats(token=self.IexApiObject.token)
-            for ticker, results in keys_stats.iterrows():
-                for _, data in result.iterrows():
+            for ticker, data in key_stats.iterrows():
+                stock = Stock.objects.get(iexfinance_ticker=ticker)
+                # Delete existing entries
+                key_stats = KeyStats.objects.filter(stock=stock, date=today)
+                key_stats.delete()    
 
-                    stock = Stock.objects.get(iexfinance_ticker=ticker)
-                    # Delete existing entries
-                    key_stats = KeyStats.objects.filter(stock=stock, date=today)
-                    key_stats.delete()    
+                # Clean data
+                if data['nextDividendDate'] == '0' or data['nextDividendDate'] == '':
+                    data['nextDividendDate'] = None
+                if data['nextEarningsDate'] == '0' or data['nextEarningsDate'] == '':
+                    data['nextEarningsDate'] = None
+                if data['exDividendDate'] == '0' or data['exDividendDate'] == '':
+                    data['exDividendDate'] = None
 
+                try:
                     # And save the new entry
                     key_stats = KeyStats.objects.create(stock=stock,                
                         date = today,                                        
@@ -132,7 +141,10 @@ class IexFinanceApi():
                         year5ChangePercent   = data['year5ChangePercent'],                       
                         ytdChangePercent     = data['ytdChangePercent']                      
                     )             
-        
+                except:
+                    print("Unexpected error:", sys.exc_info()[0])
+                    print('For ticker %s and data %s' % (ticker, data))
+
 
     # Function to query the balance sheets 
     def query_balance_sheet(self):
@@ -173,42 +185,46 @@ class IexFinanceApi():
             stocks = iexfinance.stocks.Stock(current_tickers, token=self.IexApiObject.token)
             today = datetime.date.today()
             balance_sheets = stocks.get_balance_sheet(token=self.IexApiObject.token)
-            for ticker, result in balance_sheets.items():
-                for _, data in result.iterrows():
+            for ticker, results in balance_sheets.items():
+                for _, data in results.iterrows():
                     stock = Stock.objects.get(iexfinance_ticker=ticker)
                     # Delete existing entries
                     balance_sheet = BalanceSheet.objects.filter(stock=stock, date=today)
                     balance_sheet.delete()
 
-                    # And save the new data
-                    balance_sheet = BalanceSheet.objects.create(stock = stock, 
-                        date                    = today,
-                        commonStock             = data['commonStock'],
-                        currentAssets           = data['currentAssets'],
-                        currentCash             = data['currentCash'],
-                        fiscalDate              = data['fiscalDate'],
-                        fiscalQuarter           = data['fiscalQuarter'],
-                        fiscalYear              = data['fiscalYear'],
-                        goodwill                = data['goodwill'],
-                        intangibleAssets        = data['intangibleAssets'],
-                        inventory               = data['inventory'],               
-                        longTermDebt            = data['longTermDebt'],           
-                        longTermInvestments     = data['longTermInvestments'],      
-                        minorityInterest        = data['minorityInterest'],            
-                        netTangibleAssets       = data['netTangibleAssets'],           
-                        otherAssets             = data['otherAssets'],                
-                        otherCurrentAssets      = data['otherCurrentAssets'],         
-                        propertyPlantEquipment  = data['propertyPlantEquipment'], 
-                        receivables             = data['receivables'],         
-                        reportDate              = data['reportDate'],            
-                        retainedEarnings        = data['retainedEarnings'],     
-                        shareholderEquity       = data['shareholderEquity'],      
-                        totalAssets             = data['totalAssets'],           
-                        totalCurrentLiabilities = data['totalCurrentLiabilities'],
-                        totalLiabilities        = data['totalLiabilities'],      
-                        treasuryStock           = data['treasuryStock']
-                    )
+                    try:
+                        # And save the new data
+                        balance_sheet = BalanceSheet.objects.create(stock = stock, 
+                            date                    = today,
+                            commonStock             = data['commonStock'],
+                            currentAssets           = data['currentAssets'],
+                            currentCash             = data['currentCash'],
+                            fiscalDate              = data['fiscalDate'],
+                            fiscalQuarter           = data['fiscalQuarter'],
+                            fiscalYear              = data['fiscalYear'],
+                            goodwill                = data['goodwill'],
+                            intangibleAssets        = data['intangibleAssets'],
+                            inventory               = data['inventory'],               
+                            longTermDebt            = data['longTermDebt'],           
+                            longTermInvestments     = data['longTermInvestments'],      
+                            minorityInterest        = data['minorityInterest'],            
+                            netTangibleAssets       = data['netTangibleAssets'],           
+                            otherAssets             = data['otherAssets'],                
+                            otherCurrentAssets      = data['otherCurrentAssets'],         
+                            propertyPlantEquipment  = data['propertyPlantEquipment'], 
+                            receivables             = data['receivables'],         
+                            reportDate              = data['reportDate'],            
+                            retainedEarnings        = data['retainedEarnings'],     
+                            shareholderEquity       = data['shareholderEquity'],      
+                            totalAssets             = data['totalAssets'],           
+                            totalCurrentLiabilities = data['totalCurrentLiabilities'],
+                            totalLiabilities        = data['totalLiabilities'],      
+                            treasuryStock           = data['treasuryStock']
+                        )
 
+                    except:
+                        print("Unexpected error for saving of balance sheet:", sys.exc_info()[0])
+                        print('For ticker %s and data %s' % (ticker, data))
 
     # Function to query cash flow below
     def query_cash_flow(self):
@@ -241,28 +257,32 @@ class IexFinanceApi():
             stocks = iexfinance.stocks.Stock(current_tickers, token=self.IexApiObject.token)
             today = datetime.date.today()
             cash_flow = stocks.get_cash_flow(token=self.IexApiObject.token)
-            for ticker, result in cash_flow.items():
-                for _, data in result.iterrows():
+            for ticker, results in cash_flow.items():
+                for _, data in results.iterrows():
                     stock = Stock.objects.get(iexfinance_ticker=ticker)
            
                     # Delete existing entries
                     cash_flow = CashFlow.objects.filter(stock=stock, date=today)
                     cash_flow.delete()
-
-                    # And create a new entry
-                    cash_flow = Cash_Flow.objects.create(stock = stock, 
-                        date                    = today,
-                        capitalExpenditures     = stats['capitalExpenditures'],
-                        cashFlow                = stats['cashFlow'],
-                        cashFlowFinancing       = stats['cashFlowFinancing'],
-                        depreciation            = stats['depreciation'],
-                        fiscalDate              = stats['fiscalDate'],
-                        fiscalQuarter           = stats['fiscalQuarter'],
-                        fiscalYear              = stats['fiscalYear'],
-                        netIncome               = stats['netIncome'],
-                        reportDate              = stats['reportDate'],
-                        totalInvestingCashFlows = stats['totalInvestingCashFlows']
-                    )
+                    try:
+                        # And create a new entry
+                        cash_flow = CashFlow.objects.create(stock = stock, 
+                            date                    = today,
+                            capitalExpenditures     = data['capitalExpenditures'],
+                            cashFlow                = data['cashFlow'],
+                            cashFlowFinancing       = data['cashFlowFinancing'],
+                            depreciation            = data['depreciation'],
+                            fiscalDate              = data['fiscalDate'],
+                            fiscalQuarter           = data['fiscalQuarter'],
+                            fiscalYear              = data['fiscalYear'],
+                            netIncome               = data['netIncome'],
+                            reportDate              = data['reportDate'],
+                            totalInvestingCashFlows = data['totalInvestingCashFlows']
+                        )
+                        
+                    except:
+                        print("Unexpected error:", sys.exc_info()[0])
+                        print('For ticker %s and data %s' % (ticker, data))
 
 
 
@@ -300,36 +320,40 @@ class IexFinanceApi():
             stocks = iexfinance.stocks.Stock(current_tickers, token=self.IexApiObject.token)
             today = datetime.date.today()
             income_statement = stocks.get_income_statement(token=self.IexApiObject.token)
-            for ticker, result in income_statement.items():
-                for _, data in result.iterrows():
+            for ticker, results in income_statement.items():
+                for _, data in results.iterrows():
                     stock = Stock.objects.get(iexfinance_ticker=ticker)
 
                     # Delete existing entries
                     income_statement = IncomeStatement.objects.filter(stock=stock, date=today)
                     income_statement.delete()
 
-                    # And create a new entry
-                    income_statement = IncomeStatement.objects.create(stock = stock, 
-                        date = today,
-                        costOfRevenue           = stats['costOfRevenue'],
-                        ebit                    = stats['ebit'],
-                        fiscalDate              = stats['fiscalDate'],
-                        fiscalQuarter           = stats['fiscalQuarter'],
-                        fiscalYear              = stats['fiscalYear'],
-                        grossProfit             = stats['grossProfit'],
-                        incomeTax               = stats['incomeTax'],
-                        interestIncome          = stats['interestIncome'],
-                        minorityInterest        = stats['minorityInterest'],
-                        netIncome               = stats['netIncome'],
-                        netIncomeBasic          = stats['netIncomeBasic'],
-                        operatingExpense        = stats['operatingExpense'],
-                        operatingIncome         = stats['operatingIncome'],
-                        otherIncomeExpenseNet   = stats['otherIncomeExpenseNet'],
-                        pretaxIncome            = stats['pretaxIncome'],
-                        reportDate              = stats['reportDate'],
-                        researchAndDevelopment  = stats['researchAndDevelopment'], 
-                        sellingGeneralAndAdmin  = stats['sellingGeneralAndAdmin'], 
-                        totalRevenue            = stats['totalRevenue']
-                    )
+                    try:
+                        # And create a new entry
+                        income_statement = IncomeStatement.objects.create(stock = stock, 
+                            date = today,
+                            costOfRevenue           = data['costOfRevenue'],
+                            ebit                    = data['ebit'],
+                            fiscalDate              = data['fiscalDate'],
+                            fiscalQuarter           = data['fiscalQuarter'],
+                            fiscalYear              = data['fiscalYear'],
+                            grossProfit             = data['grossProfit'],
+                            incomeTax               = data['incomeTax'],
+                            interestIncome          = data['interestIncome'],
+                            minorityInterest        = data['minorityInterest'],
+                            netIncome               = data['netIncome'],
+                            netIncomeBasic          = data['netIncomeBasic'],
+                            operatingExpense        = data['operatingExpense'],
+                            operatingIncome         = data['operatingIncome'],
+                            otherIncomeExpenseNet   = data['otherIncomeExpenseNet'],
+                            pretaxIncome            = data['pretaxIncome'],
+                            reportDate              = data['reportDate'],
+                            researchAndDevelopment  = data['researchAndDevelopment'], 
+                            sellingGeneralAndAdmin  = data['sellingGeneralAndAdmin'], 
+                            totalRevenue            = data['totalRevenue']
+                        )
     
+                    except:
+                        print("Unexpected error:", sys.exc_info()[0])
+                        print('For ticker %s and data %s' % (ticker, data))
         

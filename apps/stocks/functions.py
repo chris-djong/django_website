@@ -243,7 +243,7 @@ def get_stock_price_date(stock, date):
 
     # And in case  downloading also did not produce a good result then use the latest value we have in the database
     if stock_data.count() == 0:
-        stock_data = StockPriceHistory.objects.filter(ticker=stock).order_by('-date')[0]
+        stock_data = StockPriceHistory.objects.filter(ticker=stock).order_by('-date')
         exchange_closed = True
 
     # Add a logging line in case a lot of values are missing 
