@@ -1,5 +1,6 @@
-from .models import IexApiKey, BalanceSheet
+from .models import IexApiKey, KeyStats, BalanceSheet
 import os
+import datetime
 from ..stocks.models import Stock
 from ..mail_relay.tasks import send_mail
 import iexfinance.account  # somehow these have to be imported like this and can not be imported globally?? 
@@ -143,22 +144,23 @@ class IexFinanceApi():
         # Api only allows to call for 100 tickers at a time so split the call evenly
         for i in range(0, len(self.tickers), 100):
             current_tickers = self.tickers[i:i+100]
-            stocks = iexfinance.stocks.Stock(current_tickers)
+            stocks = iexfinance.stocks.Stock(current_tickers, token=self.IexApiObject.token)
             today = datetime.date.today()
-            balance_sheets = self.stocks.get_balance_sheet(token=self.IexApiObject.token)
+            balance_sheets = stocks.get_balance_sheet(token=self.IexApiObject.token)
             for ticker, result in balance_sheets.items():
                 for _, data in result.iterrows():
-                    stock = Stock.objects.filter(iexfinance_ticker=ticker)
+                    print(' ticker igven be ', ticker)
+                    stock = Stock.objects.get(iexfinance_ticker=ticker)
                     balance_sheet = BalanceSheet.objects.create(stock = stock, 
                         date = today,
-                        commonStock = data['commonStock'],
-                        currentAssets = data['currentAssets'],
-                        currentCash = data['currentCash'],
+                        commonStock = data['commonStock']/1e6,
+                        currentAssets = data['currentAssets']/1e6,
+                        currentCash = data['currentCash']/1e6,
                         fiscalDate = data['fiscalDate'],
                         fiscalQuarter = data['fiscalQuarter'],
                         fiscalYear = data['fiscalYear'],
-                        goodwill = data['goodwill'],
-                        intangibleAssets = data['intangibleAssets'],
+                        goodwill = data['goodwill']/1e6,
+                        intangibleAssets = data['intangibleAssets']/1e6,
                         inventory = data['inventory'],               
                         longTermDebt = data['longTermDebt'],           
                         longTermInvestments = data['longTermInvestments'],      
