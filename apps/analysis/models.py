@@ -20,7 +20,7 @@ class KeyStats(models.Model):
     dividendYield = models.FloatField()
     employees = models.IntegerField() 
     exDividendDate = models.DateField()
-    marketcap = models.FloatField()
+    marketcap = models.CharField(max_length=50)
     maxChangePercent = models.FloatField()
     month1ChangePercent = models.FloatField()
     month3ChangePercent = models.FloatField()
@@ -74,3 +74,45 @@ class BalanceSheet(models.Model):
 
     def __str__(self):
       return '%s-%s' % (self.stock, self.date)
+
+
+class CashFlow(models.Model):
+    stock                    = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    date                     = models.DateField()
+    capitalExpenditures      = models.CharField(max_length=50)
+    cashFlow                 = models.CharField(max_length=50)
+    cashFlowFinancing        = models.CharField(max_length=50)
+    depreciation             = models.CharField(max_length=50)
+    fiscalDate               = models.IntegerField()
+    fiscalQuarter            = models.IntegerField()
+    fiscalYear               = models.IntegerField()
+    netIncome                = models.CharField(max_length=50)
+    reportDate               = models.DateField()
+    totalInvestingCashFlows  = models.CharField(max_length=50)
+
+    def __str__(self):
+        return '%s-%s' % (self.stock, self.date)
+
+class IncomeStatement(models.Model):
+    stock                  = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    date                   = models.DateField()
+    costOfRevenue          = models.CharField(max_length=50)
+    ebit                   = models.CharField(max_length=50)
+    filingType             = models.CharField(max_length=50)
+    fiscalDate             = models.IntegerField()
+    fiscalQuarter          = models.IntegerField()
+    fiscalYear             = models.IntegerField()
+    grossProfit            = models.CharField(max_length=50)
+    incomeTax              = models.CharField(max_length=50)
+    interestIncome         = models.CharField(max_length=50)
+    minorityInterest       = models.CharField(max_length=50)
+    netIncome              = models.CharField(max_length=50)
+    netIncomeBasic         = models.CharField(max_length=50)
+    operatingExpense       = models.CharField(max_length=50)
+    operatingIncome        = models.CharField(max_length=50)
+    otherIncomeExpenseNet  = models.CharField(max_length=50)
+    pretaxIncome           = models.CharField(max_length=50)
+    reportDate             = models.DateField()
+    researchAndDevelopment = models.CharField(max_length=50)
+    sellingGeneralAndAdmin = models.CharField(max_length=50)
+    totalRevenue           = models.CharField(max_length=50)
